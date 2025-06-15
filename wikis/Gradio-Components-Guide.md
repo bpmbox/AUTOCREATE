@@ -97,6 +97,32 @@
 
 ---
 
+### 4. 🌐 HTML表示 (`gra_07_html/gradio.py`)
+
+#### 📋 機能概要
+- HTML表示機能
+- n8nチャットボットウィジェット統合
+- インタラクティブWebコンテンツ
+
+#### 🔧 実装詳細
+```python
+# ファイル: app/Http/Controllers/Gradio/gra_07_html/gradio.py
+# インターフェース変数: gradio_interface
+# 機能: display_html()でHTMLコンテンツ生成
+```
+
+#### 🎯 追加手順
+1. `mysite/asgi.py`で手動インポート
+2. TabbedInterfaceに追加
+3. タブ名設定: "🌐 HTML表示"
+
+#### ✅ 動作状況
+- **ステータス**: ✅ 正常動作
+- **問題**: なし
+- **確認日**: 2025年06月15日
+
+---
+
 ## 🔄 追加予定コンポーネント
 
 ### 候補リスト

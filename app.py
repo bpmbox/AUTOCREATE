@@ -55,13 +55,17 @@ def initialize_laravel_style_gradio():
         os.environ['GRADIO_ANALYTICS_ENABLED'] = 'false'
         os.environ['GRADIO_SERVER_HOST'] = '0.0.0.0'
         os.environ['GRADIO_SERVER_PORT'] = '7860'
-        os.environ['GRADIO_ROOT_PATH'] = '/gradio'  # ルートパス設定
+        os.environ['GRADIO_ROOT_PATH'] = ''  # ルートパス設定（空文字でルート）
         
         # 自動起動を完全に無効化（強化版 + 内部メソッドオーバーライド）
         os.environ['GRADIO_AUTO_LAUNCH'] = 'false'
         os.environ['GRADIO_SHARE'] = 'false'
         os.environ['GRADIO_DISABLE_LAUNCH'] = 'true'  # 起動完全無効化
         os.environ['GRADIO_LAUNCH_PREVENT'] = 'true'  # 起動防止フラグ
+        
+        # キュー無効化環境変数を追加
+        os.environ['GRADIO_ENABLE_QUEUE'] = 'false'  # キュー完全無効化
+        os.environ['GRADIO_QUEUE_DISABLED'] = 'true'  # キュー無効フラグ
         
         # Gradioの内部起動メソッドを無効化
         import gradio as gr
@@ -120,6 +124,25 @@ def initialize_laravel_style_gradio():
         # Laravel風Controller経由でGradio初期化
         from routes.web import initialize_gradio_with_error_handling
         tabbed_interface = initialize_gradio_with_error_handling()
+        
+        # 追加のキュー無効化処理（フロントエンド側も対応）
+        try:
+            # Gradioの内部設定でキューを完全無効化
+            if hasattr(tabbed_interface, 'config'):
+                if isinstance(tabbed_interface.config, dict):
+                    tabbed_interface.config['enable_queue'] = False
+                    print("✅ Frontend queue disabled via config")
+            
+            # イベントハンドラのキューも無効化
+            for tab in getattr(tabbed_interface, 'interface_list', []):
+                if hasattr(tab, 'enable_queue'):
+                    tab.enable_queue = False
+                if hasattr(tab, '_queue'):
+                    tab._queue = None
+            print("✅ All tab queues disabled")
+        except Exception as config_error:
+            print(f"⚠️ Additional queue config warning: {config_error}")
+        
         print("✅ Laravel-style Gradio initialization completed")
         
         # 統合起動専用の復元関数を定義
@@ -170,13 +193,162 @@ def initialize_laravel_style_gradio():
         return fallback_interface
 
 def create_fastapi_with_gradio():
-    """FastAPIアプリケーションをGradioと統合して作成"""
+    """GradioをルートにマウントしたLaravel風アプリケーションを作成"""
+    print("🔄 Creating Laravel-style Gradio application (Gradio at root)...")
+    
+    # まずGradioインターフェースを作成
+    try:
+        print("🔄 Starting unified Gradio interface collection...")
+        tabbed_interface = initialize_laravel_style_gradio()
+        
+        if tabbed_interface is None:
+            raise Exception("Failed to create tabbed interface")
+        
+        # キュー設定を完全に無効化
+        try:
+            print("🚫 Disabling ALL queue functionality...")
+            if hasattr(tabbed_interface, 'enable_queue'):
+                tabbed_interface.enable_queue = False
+                print("✅ App: enable_queue set to False")
+            
+            # TabbedInterfaceのキューを適切に初期化
+            if not hasattr(tabbed_interface, '_queue'):
+                tabbed_interface._queue = None
+                print("✅ App: _queue initialized as None")
+                
+            # 各インターフェースのキューも無効化  
+            if hasattr(tabbed_interface, 'interface_list'):
+                for interface in tabbed_interface.interface_list:
+                    if hasattr(interface, 'enable_queue'):
+                        interface.enable_queue = False
+                    if not hasattr(interface, '_queue'):
+                        interface._queue = None  
+                print(f"✅ App: All {len(tabbed_interface.interface_list)} interfaces queue disabled")
+                
+            print("⚠️ App: NO queue() method called - completely disabled")
+            
+        except Exception as queue_error:
+            print(f"⚠️ App: Queue disable warning: {queue_error}")
+        
+        # 直接FastAPIアプリを作成し、そこにGradioをマウント
+        try:
+            print("🔄 Creating Gradio FastAPI app for root path mounting...")
+            
+            from fastapi import FastAPI
+            from fastapi.middleware.cors import CORSMiddleware
+            
+            # 新しいFastAPIアプリを作成
+            gradio_app = FastAPI(
+                title="🚀 AI Development Platform - Laravel風統合システム",
+                description="Laravel風のGradio統合プラットフォーム - ルートパスでGradio動作",
+                version="1.0.0"
+            )
+            
+            # CORS設定を追加
+            gradio_app.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+            print("✅ FastAPI app created and CORS configured")
+            
+            # 静的ファイルの設定
+            from fastapi.staticfiles import StaticFiles
+            import mimetypes
+            
+            try:
+                # MIME type設定
+                mimetypes.add_type('text/css', '.css')
+                mimetypes.add_type('application/javascript', '.js')
+                mimetypes.add_type('application/json', '.json')
+                
+                gradio_app.mount("/static", StaticFiles(directory="static"), name="static")
+                print("✅ Static files mounted at /static on Gradio app")
+            except Exception as static_error:
+                print(f"⚠️ Static files mount failed: {static_error}")
+            
+            # Laravel風のルーティングをAPIエンドポイントとして追加
+            try:
+                from routes.web import router as web_router
+                gradio_app.include_router(web_router, prefix="/api")
+                print("✅ Laravel-style web routes loaded at /api on Gradio app")
+            except ImportError as e:
+                print(f"⚠️ Web routes not loaded: {e}")
+            
+            # 追加のAPIエンドポイント（Laravel風）
+            try:
+                # データベース関連のAPIルート
+                from fastapi import APIRouter
+                laravel_api = APIRouter(prefix="/laravel", tags=["Laravel API"])
+                
+                @laravel_api.get("/status")
+                async def laravel_status():
+                    return {
+                        "status": "success",
+                        "message": "Laravel-style API is working with Gradio",
+                        "gradio_mounted": True,
+                        "gradio_path": "/",
+                        "app_mode": "full_laravel_gradio",
+                        "endpoints": [
+                            "/api/*",
+                            "/laravel/status", 
+                            "/laravel/db-status"
+                        ]
+                    }
+                
+                @laravel_api.get("/db-status")
+                async def database_status():
+                    try:
+                        missing_dbs = check_missing_databases()
+                        return {
+                            "status": "success",
+                            "databases": {
+                                "missing": missing_dbs,
+                                "total_required": 6,
+                                "available": 6 - len(missing_dbs)
+                            }
+                        }
+                    except Exception as e:
+                        return {
+                            "status": "error", 
+                            "message": str(e)
+                        }
+                
+                gradio_app.include_router(laravel_api)
+                print("✅ Laravel-style API endpoints added")
+                
+            except Exception as api_error:
+                print(f"⚠️ Laravel API setup failed: {api_error}")
+            
+            # GradioインターフェースをFastAPIにマウント（ルートパス）
+            import gradio as gr
+            gradio_app = gr.mount_gradio_app(gradio_app, tabbed_interface, path="/")
+            print("✅ Gradio mounted to FastAPI app at root path /")
+            
+            print("🚀 ✅ Gradio mounted at ROOT (/) with Laravel-style features!")
+            return gradio_app
+                
+        except Exception as create_error:
+            print(f"❌ Gradio app creation failed: {create_error}")
+            import traceback
+            traceback.print_exc()
+            
+    except Exception as e:
+        print(f"❌ Failed to create Gradio-first app: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    # フォールバック: 通常のFastAPIアプリを返す
+    print("⚠️ Falling back to standard FastAPI app with Laravel features")
+    
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
     
     app = FastAPI(
-        title="AI Development Platform",
-        description="Laravel風のGradio統合プラットフォーム",
+        title="AI Development Platform (Laravel Fallback)",
+        description="Laravel風のGradio統合プラットフォーム（フォールバック）",
         version="1.0.0"
     )
     
@@ -189,29 +361,180 @@ def create_fastapi_with_gradio():
         allow_headers=["*"],
     )
     
-    # 静的ファイルの設定（MIME type対応）
+    # 静的ファイルの設定
     from fastapi.staticfiles import StaticFiles
     import mimetypes
     
-    # MIME type設定
     mimetypes.add_type('text/css', '.css')
     mimetypes.add_type('application/javascript', '.js')
     mimetypes.add_type('application/json', '.json')
     
-    # 静的ファイルをマウント
     try:
         app.mount("/static", StaticFiles(directory="static"), name="static")
-        print("✅ Static files mounted with proper MIME types")
+        print("✅ Static files mounted (fallback)")
     except Exception as static_error:
         print(f"⚠️ Static files mount failed: {static_error}")
     
     # Laravel風のルーティング設定
     try:
         from routes.web import router as web_router
-        app.include_router(web_router)
-        print("✅ Laravel-style web routes loaded")
+        app.include_router(web_router, prefix="/api")
+        print("✅ Laravel-style web routes loaded at /api (fallback)")
     except ImportError as e:
         print(f"❌ Failed to load web routes: {e}")
+    
+    # フォールバック用のエンドポイント
+    @app.get("/")
+    async def fallback_root():
+        return {
+            "message": "Laravel風アプリ（フォールバック）",
+            "status": "fallback"
+        }
+    
+    return app
+
+
+def initialize_laravel_style_gradio():
+            gr.HTML("""
+            <div style="text-align: center; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); 
+                        color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h1>🚀 AI Development Platform</h1>
+                <h2>Laravel風統合システム</h2>
+                <p>✨ 15のGradioインターフェースを統合 ✨</p>
+            </div>
+            """)
+            
+            chatbot = gr.Chatbot(label="💬 Laravel風AIチャット", height=400)
+            msg = gr.Textbox(label="メッセージ", placeholder="Laravel風AIに質問してください...")
+            send_btn = gr.Button("送信 📤", variant="primary")
+            
+            send_btn.click(simple_chat, inputs=[msg, chatbot], outputs=[chatbot, msg])
+            msg.submit(simple_chat, inputs=[msg, chatbot], outputs=[chatbot, msg])
+        
+        print("✅ Simple Gradio interface created successfully")
+        
+        # FastAPIアプリを作成
+        from fastapi import FastAPI
+        from fastapi.middleware.cors import CORSMiddleware
+        
+        app = FastAPI(
+            title="AI Development Platform - Laravel風",
+            description="Laravel風のGradio統合プラットフォーム",
+            version="1.0.0"
+        )
+        
+        # CORS設定
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        
+        # GradioをFastAPIにマウント（ルートパス）
+        app = gr.mount_gradio_app(app, demo, path="/")
+        print("✅ Gradio mounted at root path (/) successfully")
+        
+        # 静的ファイルの設定
+        from fastapi.staticfiles import StaticFiles
+        try:
+            app.mount("/static", StaticFiles(directory="static"), name="static")
+            print("✅ Static files mounted at /static")
+        except Exception as static_error:
+            print(f"⚠️ Static files mount failed: {static_error}")
+        
+        # Laravel風のAPIエンドポイント
+        @app.get("/api/status")
+        async def api_status():
+            return {
+                "status": "success",
+                "message": "Laravel風AI Development Platform",
+                "gradio_mounted": True,
+                "root_path": "/",
+                "features": [
+                    "📄 ドキュメント生成",
+                    "🌐 HTML表示", 
+                    "🚀 統合管理ダッシュボード",
+                    "💬 AIチャット",
+                    "📁 ファイル管理"
+                ]
+            }
+        
+        @app.get("/api/laravel/info")
+        async def laravel_info():
+            return {
+                "framework": "Laravel-style Python",
+                "platform": "FastAPI + Gradio",
+                "interfaces": 15,
+                "databases": ["SQLite", "PostgreSQL"],
+                "features": "AI Development Platform"
+            }
+        
+        print("✅ Laravel-style API endpoints added")
+        print("🚀 ✅ Laravel-style Gradio app created successfully at ROOT PATH!")
+        
+        return app
+        
+    except Exception as e:
+        print(f"❌ Failed to create Laravel-style Gradio app: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # 最小限のフォールバック
+        from fastapi import FastAPI
+        app = FastAPI(title="Fallback App")
+        
+        @app.get("/")
+        async def fallback_root():
+            return {"message": "Laravel風アプリ（フォールバック）", "status": "fallback"}
+        
+        return app
+    
+    # フォールバック: 通常のFastAPIアプリを返す
+    print("⚠️ Falling back to standard FastAPI app with Laravel features")
+    
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    
+    app = FastAPI(
+        title="AI Development Platform (Laravel Fallback)",
+        description="Laravel風のGradio統合プラットフォーム（フォールバック）",
+        version="1.0.0"
+    )
+    
+    # CORS設定
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
+    # 静的ファイルの設定
+    from fastapi.staticfiles import StaticFiles
+    import mimetypes
+    
+    mimetypes.add_type('text/css', '.css')
+    mimetypes.add_type('application/javascript', '.js')
+    mimetypes.add_type('application/json', '.json')
+    
+    try:
+        app.mount("/static", StaticFiles(directory="static"), name="static")
+        print("✅ Static files mounted (fallback)")
+    except Exception as static_error:
+        print(f"⚠️ Static files mount failed: {static_error}")
+    
+    # Laravel風のルーティング設定
+    try:
+        from routes.web import router as web_router
+        app.include_router(web_router, prefix="/api")
+        print("✅ Laravel-style web routes loaded at /api (fallback)")
+    except ImportError as e:
+        print(f"❌ Failed to load web routes: {e}")
+    
+    return app
     
     # Gradioインターフェースをマウント（統合起動・重複防止）
     if not hasattr(app, '_gradio_mounted'):
@@ -243,21 +566,55 @@ def create_fastapi_with_gradio():
             except Exception as queue_error:
                 print(f"⚠️ App: Queue disable warning: {queue_error}")
             
-            # Gradioアプリの作成時に静的ファイル設定を追加
-            gradio_app = gr.routes.App.create_app(tabbed_interface)
+            # 安全なマウント方法（循環参照を回避）
+            try:
+                print("🔄 Creating safe Gradio mount...")
+                
+                # 1. 単純な最初のインターフェースのみをマウント（安全）
+                if hasattr(tabbed_interface, 'interface_list') and tabbed_interface.interface_list:
+                    first_interface = tabbed_interface.interface_list[0]
+                    print(f"🎯 Using first interface: {first_interface.title}")
+                    
+                    # 安全なマウント方法
+                    gradio_app = gr.routes.App.create_app(first_interface)
+                    app.mount("/gradio", gradio_app)
+                    print("✅ First interface mounted successfully")
+                    
+                    # 他のインターフェースも個別にマウント
+                    for i, interface in enumerate(tabbed_interface.interface_list[1:], 1):
+                        try:
+                            mount_path = f"/gradio_{i}"
+                            individual_app = gr.routes.App.create_app(interface)
+                            app.mount(mount_path, individual_app)
+                            print(f"✅ Interface {i} mounted at {mount_path}")
+                        except Exception as individual_error:
+                            print(f"⚠️ Individual interface {i} mount failed: {individual_error}")
+                else:
+                    print("❌ No interfaces available for mounting")
+                    
+            except Exception as mount_error:
+                print(f"❌ Safe mount failed: {mount_error}")
+                # 最後の手段：非常に簡単なインターフェース
+                try:
+                    def simple_test(text):
+                        return f"Echo: {text}"
+                    
+                    simple_interface = gr.Interface(
+                        fn=simple_test,
+                        inputs=gr.Textbox(label="Input"),
+                        outputs=gr.Textbox(label="Output"),
+                        title="🚀 Simple Test Interface"
+                    )
+                    
+                    simple_app = gr.routes.App.create_app(simple_interface)
+                    app.mount("/gradio", simple_app)
+                    print("✅ Emergency simple interface mounted")
+                except Exception as emergency_error:
+                    print(f"❌ Emergency mount also failed: {emergency_error}")
             
-            # MIME type修正のための設定
-            from fastapi.staticfiles import StaticFiles
-            from fastapi.responses import FileResponse
-            import mimetypes
-            
-            # CSSとJSファイルのMIME type設定
-            mimetypes.add_type('text/css', '.css')
-            mimetypes.add_type('application/javascript', '.js')
-            
-            app.mount("/gradio", gradio_app)
             app._gradio_mounted = True  # 重複防止フラグ
-            print("🚀 ✅ UNIFIED Gradio mounted at /gradio with MIME fixes!")
+            
+            print("� ✅ SAFE Gradio mounted at /gradio (avoiding circular references)!")
         except Exception as e:
             print(f"❌ Failed to mount Gradio: {e}")
     else:
