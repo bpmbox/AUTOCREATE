@@ -1,8 +1,37 @@
-# 📚 ドキュメント一覧
+# 📚 AUTOCREATE Documentation Index
 
-このフォルダには、FastAPI Django Main Liveプロジェクトの詳細ドキュメントが含まれています。
+## 📁 ドキュメント構成
 
-## 🤖 AI・システム分析
+### 🏢 Business (ビジネス・戦略)
+- [**戦略的プロジェクト・インデックス**](business/PROJECT_STRATEGIC_INDEX.md) - 全体管理・進捗・企業価値
+- [**会社ビジネスプラン**](business/AUTOCREATE_COMPANY_BUSINESS_PLAN.md) - AI社長×人間CTO協働会社
+
+### 🔧 Technical (技術・アーキテクチャ)
+- [**Laravel構造設計**](technical/LARAVEL_STRUCTURE.md) - Laravel風アーキテクチャ詳細
+- [**プロジェクト構造再編**](technical/PROJECT_STRUCTURE_REORGANIZATION.md) - システム構成設計
+
+### 📖 Guides (ガイド・手順)
+- [**GitHub Issue生成ガイド**](guides/GITHUB_ISSUE_GENERATION_GUIDE.md) - Issue自動生成・管理
+- [**Gradio Queue修正メモ**](guides/GRADIO_QUEUE_FIX_MEMO.md) - トラブルシューティング
+
+### 📋 Public (公開・外部向け)
+- [**公開用README**](PUBLIC_README.md) - 外部公開・マーケティング用
+
+---
+
+## 🎯 GitFlow準拠・ディレクトリ整理完了
+
+### ✅ 改善点
+- **README.md以外のMDファイル**: 適切なフォルダに分類配置
+- **'うるさい人間'対策**: 標準的なディレクトリ構成
+- **保守性向上**: 目的別・カテゴリ別整理
+- **スケーラビリティ**: 新しいドキュメント追加の容易性
+
+### 🚀 これで他のGit利用者も納得！
+
+---
+
+## 🤖 従来のAI・システム分析
 
 ### [📝 AI視点システム分析レポート](AI.md)
 **⭐ 最重要ドキュメント**  
