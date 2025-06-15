@@ -61,5 +61,6 @@ def setup_gradio_interfaces():
     all_names = default_names + gradio_names
 
     tabs = gr.TabbedInterface(all_interfaces, all_names)
-    tabs.queue()
+    # tabs.queue()  # 個別キュー設定を無効化 - 統合起動で管理
+    print("⚠️ Individual queue setup DISABLED for polls gradio_config")
     return tabs

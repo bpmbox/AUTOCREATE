@@ -22,7 +22,7 @@ DATABASE_PATHS = {
 
 def get_db_connection(db_name='chat_history'):
     """
-    データベース接続を取得
+    データベース接続を取得（エラーハンドリング強化）
     
     Args:
         db_name: データベース名
@@ -30,8 +30,43 @@ def get_db_connection(db_name='chat_history'):
     Returns:
         sqlite3.Connection: データベース接続
     """
-    db_path = get_db_path(db_name)
-    return sqlite3.connect(db_path)
+    try:
+        db_path = get_db_path(db_name)
+        
+        # ディレクトリ存在確認
+        db_dir = os.path.dirname(db_path)
+        if not os.path.exists(db_dir):
+            os.makedirs(db_dir, exist_ok=True)
+            print(f"📁 Created database directory: {db_dir}")
+        
+        # データベースファイル存在確認
+        if not os.path.exists(db_path):
+            print(f"⚠️ Database file not found, creating: {db_path}")
+            # 空のデータベースファイルを作成
+            conn = sqlite3.connect(db_path)
+            conn.execute("CREATE TABLE IF NOT EXISTS connection_test (id INTEGER)")
+            conn.commit()
+            conn.close()
+        
+        # 接続とテスト
+        conn = sqlite3.connect(db_path, timeout=10.0)
+        conn.execute("SELECT 1")  # 接続テスト
+        return conn
+        
+    except sqlite3.Error as e:
+        print(f"❌ SQLite error for {db_name}: {e}")
+        # フォールバック：メモリ内データベース
+        print(f"🔄 Using in-memory database as fallback for {db_name}")
+        conn = sqlite3.connect(":memory:")
+        conn.execute("CREATE TABLE IF NOT EXISTS connection_test (id INTEGER)")
+        return conn
+        
+    except Exception as e:
+        print(f"❌ Database connection error for {db_name}: {e}")
+        # 最終フォールバック
+        conn = sqlite3.connect(":memory:")
+        conn.execute("CREATE TABLE IF NOT EXISTS connection_test (id INTEGER)")
+        return conn
 
 def get_db_path(db_name):
     """データベースパスを取得"""

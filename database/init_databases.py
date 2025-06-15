@@ -26,6 +26,13 @@ def create_databases():
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,
                 category TEXT DEFAULT 'general',
+                github_url TEXT,
+                system_type TEXT DEFAULT 'general',
+                status TEXT DEFAULT 'pending',
+                priority INTEGER DEFAULT 1,
+                created_by TEXT,
+                approved_at TIMESTAMP,
+                executed_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -116,6 +123,104 @@ def create_databases():
         import traceback
         traceback.print_exc()
         return False
+
+def create_all_missing_databases():
+    """config/database.pyで定義されているすべてのデータベースを作成"""
+    try:
+        from config.database import DATABASE_PATHS
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        print(f'📂 データベース作成ディレクトリ: {current_dir}')
+        
+        for db_name, db_path in DATABASE_PATHS.items():
+            # 既に存在する場合はスキップ
+            if os.path.exists(db_path):
+                print(f'✅ {db_name} は既に存在します')
+                continue
+            
+            print(f'📋 {db_name} データベースを作成中...')
+            
+            # データベースディレクトリを作成
+            os.makedirs(os.path.dirname(db_path), exist_ok=True)
+            
+            # データベース接続を作成（ファイルが自動作成される）
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            # 基本テーブルを作成（データベースによって異なる）
+            if 'conversation' in db_name or 'chat' in db_name:
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS conversations (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        message TEXT NOT NULL,
+                        response TEXT,
+                        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+            elif 'github' in db_name:
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS github_issues (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        issue_number INTEGER,
+                        title TEXT,
+                        body TEXT,
+                        status TEXT DEFAULT 'open',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+            elif 'rpa' in db_name:
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS rpa_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        action TEXT,
+                        result TEXT,
+                        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+            elif 'memory' in db_name:
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS memories (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        key TEXT UNIQUE,
+                        value TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+            elif 'users' in db_name:
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT UNIQUE,
+                        email TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+            else:
+                # 汎用テーブル
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS generic_data (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        data TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+            
+            conn.commit()
+            conn.close()
+            print(f'✅ {db_name} データベース作成完了: {db_path}')
+        
+        print('🎉 すべてのデータベースが正常に作成されました!')
+        return True
+        
+    except Exception as e:
+        print(f'❌ データベース作成エラー: {e}')
+        import traceback
+        traceback.print_exc()
+        return False
+
+def main():
+    """メイン実行関数（後方互換性のため）"""
+    return create_databases()
 
 if __name__ == "__main__":
     create_databases()

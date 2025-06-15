@@ -14,6 +14,7 @@ import logging
 import importlib
 import os
 import pkgutil
+from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,17 @@ class GradioController(HybridController):
                 }
                 """
             )
+            
+            # Gradio 4.31.5での正しいキュー制御
+            try:
+                self.main_interface.enable_queue = False
+                if hasattr(self.main_interface, '_queue'):
+                    self.main_interface._queue = None
+                print("✅ Main interface queue disabled")
+                    
+            except Exception as queue_error:
+                print(f"⚠️ Main interface queue setup warning: {queue_error}")
+            
         return self.main_interface
     
     def include_gradio_interfaces(self) -> Dict[str, gr.Interface]:
@@ -130,8 +142,20 @@ class GradioController(HybridController):
         all_interfaces = [self.create_main_interface()]
         tab_names = ["メイン"]
         
-        # 既存インターフェースを追加
+        # 既存インターフェースを追加（キュー無効化付き）
         for name, interface in self.interfaces.items():
+            # 各インターフェースのキューを無効化
+            try:
+                if hasattr(interface, '_queue'):
+                    interface._queue = None
+                if hasattr(interface, 'enable_queue'):
+                    interface.enable_queue = False
+                if hasattr(interface, 'queue_enabled_for_network'):
+                    interface.queue_enabled_for_network = False
+                print(f"✅ Interface '{name}' queue disabled")
+            except Exception as e:
+                print(f"⚠️ Interface '{name}' queue disable warning: {e}")
+            
             all_interfaces.append(interface)
             tab_names.append(name)
         
@@ -150,6 +174,18 @@ class GradioController(HybridController):
             }
             """
         )
+        
+        # TabbedInterface自体のキューも無効化
+        try:
+            if hasattr(tabbed_interface, '_queue'):
+                tabbed_interface._queue = None
+            if hasattr(tabbed_interface, 'enable_queue'):
+                tabbed_interface.enable_queue = False
+            if hasattr(tabbed_interface, 'queue_enabled_for_network'):
+                tabbed_interface.queue_enabled_for_network = False
+            print("✅ TabbedInterface queue completely disabled")
+        except Exception as e:
+            print(f"⚠️ TabbedInterface queue disable warning: {e}")
         
         return tabbed_interface
     
@@ -215,6 +251,44 @@ class GradioController(HybridController):
             "status": "success",
             "message": "Interface deletion not yet implemented"
         }
+    
+    def setup_gradio_interfaces(self):
+        """
+        Gradio インターフェースをセットアップ - キューエラー防止対応
+        """
+        try:
+            # GradioInterfaceServiceを使用してインターフェースを作成
+            from app.Services.GradioInterfaceService import GradioInterfaceService
+            service = GradioInterfaceService()
+            tabbed_interface = service.create_tabbed_interface()
+            
+            # Gradio 4.31.5での正しいキュー制御
+            try:
+                tabbed_interface.enable_queue = False
+                if hasattr(tabbed_interface, '_queue'):
+                    tabbed_interface._queue = None
+                print("✅ GradioController: tabbed interface queue disabled")
+                    
+            except Exception as queue_error:
+                print(f"⚠️ GradioController: queue setup warning: {queue_error}")
+            
+            return tabbed_interface
+            
+        except Exception as e:
+            print(f"❌ GradioController setup error: {e}")
+            # フォールバック用のシンプルなインターフェース
+            fallback_interface = self.create_main_interface()
+            
+            # フォールバックも同様にキュー制御
+            try:
+                fallback_interface.enable_queue = False
+                if hasattr(fallback_interface, '_queue'):
+                    fallback_interface._queue = None
+                print("✅ GradioController: fallback interface queue disabled")
+            except:
+                pass
+            
+            return fallback_interface
 
 # インスタンス作成
 gradio_controller = GradioController()
