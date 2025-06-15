@@ -89,6 +89,16 @@ try:
     except Exception as e:
         print(f"❌ Failed to load HTML Display interface: {e}")
     
+    # 5. OpenInterpreter統合 インターフェース (手動追加)
+    try:
+        print("🔄 Loading OpenInterpreter interface...")
+        from app.Http.Controllers.Gradio.gra_09_openinterpreter.openinterpreter import gradio_interface as openinterpreter_interface
+        gradio_interfaces.append(openinterpreter_interface)
+        tab_names.append("🧠 OpenInterpreter")
+        print("✅ OpenInterpreter interface loaded")
+    except Exception as e:
+        print(f"❌ Failed to load OpenInterpreter interface: {e}")
+    
     # TabbedInterfaceを手動で作成
     if gradio_interfaces:
         import gradio as gr
