@@ -48,12 +48,23 @@ help:
 	@echo "  feature-start   	Start new feature development (usage: make feature-start name=feature-name)"
 	@echo "  feature-finish  	Finish feature development (usage: make feature-finish name=feature-name)"
 	@echo "  collab-commit   	Make collaboration commit (usage: make collab-commit message='commit message')"
-	@echo "  collab-status   	Show collaboration development status"
 	@echo ""
-	@echo "📋 GitHub Issue生成コマンド:"
-	@echo "  generate-issues   	戦略的インデックスからGitHub Issuesを生成"
-	@echo "  list-issues        	現在のGitHub Issues一覧を表示"
-	@echo "  close-completed-issues	完了済みIssueをクローズ"
+	@echo "🤖 OCR RPA Automation Commands:"
+	@echo "  ocr-rpa-demo    	Run OCR RPA automation demo (kinkaimasu.jp)"
+	@echo "  ocr-rpa-config  	Edit OCR RPA configuration"
+	@echo "  ocr-rpa-report  	Generate latest automation report"
+	@echo "  ocr-rpa-clean   	Clean OCR RPA temporary files"
+	@echo "  vnc-auto        	Run VNC desktop automation demo"
+	@echo "  jupyter-ocr     	Launch Jupyter notebook for OCR RPA demo"
+	@echo "  screenshots-view	View collected screenshots"
+	@echo ""
+	@echo "📚 WIKI RAG System Commands:"
+	@echo "  wiki-rag        	Start WIKI RAG system with Gradio UI"
+	@echo "  wiki-rag-cli    	Use WIKI RAG CLI for command line queries"
+	@echo "  wiki-rag-build  	Build/rebuild WIKI RAG knowledge base"
+	@echo "  wiki-rag-install	Install WIKI RAG dependencies"
+	@echo "  wiki-rag-lite   	Start WIKI RAG lite system (no auth required)"
+	@echo "  wiki-rag-lite-cli	Use WIKI RAG lite CLI for command line queries"
 
 #Defines a target named install. This target will install the project using Poetry.
 install: poetry-install install-pre-commit farewell
@@ -302,3 +313,253 @@ list-issues:
 close-completed-issues:
 	@echo "✅ 完了済みIssueのクローズ処理"
 	@echo "Phase 1完了Issues (#001-#005) をクローズします"
+
+# 🤖 AI Vision & OCR Commands
+ocr-install:
+	@echo "📦 OCR分析用パッケージインストール中..."
+	@pip install -r requirements_ocr.txt
+	@echo "✅ OCR依存関係インストール完了"
+
+ocr-gradio:
+	@$(MAKE) stop-port
+	@echo "🚀 AUTOCREATE OCR Gradio起動中..."
+	@echo "🏛️ AI社長×無職CTO体制による画像解析システム"
+	@python gradio_ocr_analyzer.py
+
+gas-login:
+	@echo "🔐 Google Apps Script CLI認証"
+	@clasp login
+
+gas-push:
+	@echo "📤 GAS OCR API をアップロード中..."
+	@cd gas-ocr-api && clasp push
+	@echo "✅ GAS API デプロイ完了"
+	@echo "🔗 Web App URLを取得してGradioに設定してください"
+
+ocr-demo:
+	@echo "🎯 OCR分析デモ実行中..."
+	@echo "📸 サンプル画像でテスト実行"
+	@python -c "
+	from gradio_ocr_analyzer import AutocreateOCRAnalyzer
+	analyzer = AutocreateOCRAnalyzer()
+	print('🤖 AI社長: OCR分析システム準備完了')
+	print('💡 使用方法: make ocr-gradio でGradioインターフェース起動')
+	"
+
+screenshot-ocr:
+	@echo "📸 スクリーンショット撮影 → OCR解析"
+	@docker exec ubuntu-desktop-vnc bash -c "DISPLAY=:1 scrot /tmp/auto_screenshot_$$(date +%Y%m%d_%H%M%S).png"
+	@echo "🔍 撮影完了 - Gradioでアップロードして解析してください"
+
+# OCRパイプライン全体テスト
+ocr-pipeline:
+	@echo "🚀 OCR分析パイプライン全体テスト"
+	@$(MAKE) screenshot-ocr
+
+# 🤖 OCR RPA Automation Commands
+ocr-rpa-demo:
+	@echo "🚀 AUTOCREATE OCR RPA自動化デモ開始"
+	@echo "🏛️ AI社長×無職CTO体制による知的自動化"
+	@mkdir -p screenshots reports
+	@python scripts/ocr_rpa_automation.py
+	@echo "✅ OCR RPA デモ完了"
+
+ocr-rpa-config:
+	@echo "⚙️ OCR RPA設定エディタ"
+	@if [ ! -f config/ocr_rpa_config.json ]; then \
+		echo "❌ 設定ファイルが見つかりません"; \
+		echo "📁 config/ocr_rpa_config.json を作成してください"; \
+	else \
+		echo "📝 設定ファイルを開きます..."; \
+		nano config/ocr_rpa_config.json; \
+	fi
+
+ocr-rpa-report:
+	@echo "📋 最新のOCR RPA自動化レポート"
+	@if [ -d reports ]; then \
+		echo "📊 利用可能なレポートファイル:"; \
+		ls -la reports/*.json 2>/dev/null | tail -5 || echo "❌ レポートファイルが見つかりません"; \
+		echo ""; \
+		echo "最新レポートの内容:"; \
+		ls -t reports/*.json 2>/dev/null | head -1 | xargs cat 2>/dev/null | jq '.metadata, .technical_results, .business_value' 2>/dev/null || echo "❌ 有効なJSONレポートが見つかりません"; \
+	else \
+		echo "❌ reportsディレクトリが見つかりません"; \
+		echo "💡 make ocr-rpa-demo を先に実行してください"; \
+	fi
+
+ocr-rpa-clean:
+	@echo "🧹 OCR RPA一時ファイルクリーンアップ"
+	@rm -rf screenshots/*.png reports/*.json
+	@echo "✅ スクリーンショットとレポートファイルをクリーンアップしました"
+
+vnc-auto:
+	@echo "🖥️ VNCデスクトップ自動操作デモ"
+	@echo "🏛️ AI社長×無職CTO体制によるフル自動化"
+	@python scripts/vnc_desktop_automation.py
+	@echo "✅ VNC自動操作デモ完了"
+
+jupyter-ocr:
+	@echo "📓 Jupyter OCR RPA デモノートブック起動"
+	@echo "🏛️ 誰でも使えるAI自動化システム"
+	@jupyter lab AUTOCREATE_OCR_RPA_Demo.ipynb --ip=0.0.0.0 --port=8889 --no-browser --allow-root
+	@echo "🌐 アクセス: http://localhost:8889"
+
+screenshots-view:
+	@echo "📸 収集済みスクリーンショット一覧"
+	@if [ -d screenshots ]; then \
+		echo "📊 スクリーンショットファイル:"; \
+		ls -la screenshots/*.png 2>/dev/null || echo "❌ スクリーンショットが見つかりません"; \
+		echo ""; \
+		echo "💡 最新のスクリーンショット:"; \
+		ls -t screenshots/*.png 2>/dev/null | head -1 | xargs file 2>/dev/null || echo "ファイル情報を取得できません"; \
+	else \
+		echo "❌ screenshotsディレクトリが見つかりません"; \
+		echo "💡 make vnc-auto または make ocr-rpa-demo を先に実行してください"; \
+	fi
+
+# OCR + RPA 自動化関連コマンド
+.PHONY: ocr-rpa-loop ocr-rpa-test notebook-demo
+
+ocr-rpa-loop: ## OCR + RPA 自動化ループを実行
+	@echo "🚀 OCR + RPA 自動化ループ実行中..."
+	python scripts/ocr_rpa_automation_loop.py
+
+ocr-rpa-test: ## OCR + RPA システムをテスト
+	@echo "🧪 OCR + RPA システムテスト中..."
+	python ocr_rpa_test.py
+
+notebook-demo: ## Jupyter Notebook デモを起動
+	@echo "📱 Jupyter Notebook デモ起動中..."
+	jupyter notebook AUTOCREATE_AI_Vision_Automation_Complete_Guide.ipynb
+
+notebook-colab: ## Google Colab 用のノートブック情報を表示
+	@echo "🌐 Google Colab でのノートブック使用方法:"
+	@echo "1. 以下のURLにアクセス:"
+	@echo "   https://colab.research.google.com/"
+	@echo "2. GitHubからノートブックをインポート:"
+	@echo "   AUTOCREATE_AI_Vision_Automation_Complete_Guide.ipynb"
+	@echo "3. 'ランタイム' → 'すべてのセルを実行' をクリック"
+
+hybrid-ocr: ## ハイブリッドOCR解析システム実行
+	@echo "🔧 ハイブリッドOCR解析システム実行中..."
+	python scripts/hybrid_ocr_analyzer.py
+
+local-ocr: ## ローカルOCR解析システム実行
+	@echo "🏠 ローカルOCR解析システム実行中..."
+	python scripts/local_ocr_analyzer.py
+
+gas-status: ## GAS OCR APIの状態確認
+	@echo "📡 GAS OCR API状態確認中..."
+	@python -c "import requests; r=requests.get('https://script.google.com/macros/s/1ISqaty-oD30b559LXJ5q6dkXYp1H888dxP4uSjK9osgDUm6wDm9rUOOz/exec', timeout=10); print(f'Status: {r.status_code}, Response: {r.text[:100]}...')" || echo "❌ GAS API接続失敗"
+
+ocr-demo: ## OCR解析システム全般デモ
+	@echo "🎭 OCR解析システム全般デモ実行中..."
+	@echo "1. ハイブリッドOCR解析:"
+	@python scripts/hybrid_ocr_analyzer.py
+	@echo "\n2. 自動化ループテスト:"
+	@python scripts/ocr_rpa_automation_loop.py
+
+# GitHub Issue・Project管理
+.PHONY: issues create-issue list-issues project-status
+
+issues: ## Issue一覧を表示
+	@echo "📋 AUTOCREATE プロジェクト Issue一覧:"
+	@gh issue list --label "task,ai-ceo,cto-jobless,ocr-rpa,kinkaimasu"
+
+create-issue: ## 新しいIssueを作成（対話式）
+	@echo "📝 新しいIssue作成:"
+	@gh issue create
+
+list-issues: ## ラベル別Issue一覧
+	@echo "🏛️ AI社長関連Issue:"
+	@gh issue list --label "ai-ceo" || echo "なし"
+	@echo "\n🔧 無職CTO関連Issue:"  
+	@gh issue list --label "cto-jobless" || echo "なし"
+	@echo "\n🏪 kinkaimasu.jp案件:"
+	@gh issue list --label "kinkaimasu" || echo "なし"
+	@echo "\n🤖 OCR+RPA関連:"
+	@gh issue list --label "ocr-rpa" || echo "なし"
+
+project-status: ## プロジェクト全体状況確認
+	@echo "🚀 AUTOCREATE プロジェクト状況:"
+	@echo "📊 総Issue数: $$(gh issue list --json number | jq '. | length')"
+	@echo "🔥 高優先度Issue: $$(gh issue list --label 'priority:high' --json number | jq '. | length')"
+	@echo "✅ 完了Issue: $$(gh issue list --state closed --json number | jq '. | length')"
+	@echo "🏛️ AI社長担当: $$(gh issue list --label 'ai-ceo' --json number | jq '. | length')"
+	@echo "🔧 無職CTO担当: $$(gh issue list --label 'cto-jobless' --json number | jq '. | length')"
+
+github-setup: ## GitHub設定確認・初期設定
+	@echo "⚙️ GitHub設定状況:"
+	@gh auth status
+	@echo "\n📋 ラベル一覧:"
+	@gh label list || echo "ラベル取得エラー"
+	@echo "\n📊 リモート設定:"
+	@git remote -v
+
+selector-install: ## セレクター分析システム用パッケージインストール
+	@echo "📦 セレクター分析システム用パッケージインストール中..."
+	pip install -r requirements_selector.txt
+	@echo "✅ セレクター分析システム用パッケージインストール完了"
+
+selector-analyze: ## セレクター分析システムでkinkaimasu.jp分析
+	@echo "🎯 セレクター分析システム実行中..."
+	python scripts/selector_analyzer.py
+
+selector-demo: ## セレクター分析システムデモ（Selenium使用）
+	@echo "🚀 セレクター分析システムデモ実行..."
+	@echo "注意: Chrome/Chromiumが必要です"
+	python scripts/selector_analyzer.py
+
+smart-automation: ## スマート自動化システム（OCR + セレクター統合）
+	@echo "🧠 スマート自動化システム実行中..."
+	@echo "1. ハイブリッドOCR解析:"
+	@python scripts/hybrid_ocr_analyzer.py
+	@echo "\n2. セレクター分析:"
+	@python scripts/selector_analyzer.py
+	@echo "\n✅ スマート自動化システム完了"
+
+# =============================================================================
+# 🤖 WIKI RAG System Commands
+# =============================================================================
+
+.PHONY: wiki-rag wiki-rag-cli wiki-rag-build wiki-rag-install
+
+wiki-rag-install: ## Install WIKI RAG system dependencies
+	@echo -e "$(COLOR_CYAN)Installing WIKI RAG dependencies...$(COLOR_RESET)"
+	pip install -r requirements_wiki_rag.txt
+	@echo -e "$(COLOR_GREEN)✅ WIKI RAG dependencies installed!$(COLOR_RESET)"
+
+wiki-rag-build: ## Build/rebuild WIKI RAG knowledge base
+	@echo -e "$(COLOR_CYAN)Building WIKI RAG knowledge base...$(COLOR_RESET)"
+	python scripts/wiki_rag_cli.py build --force
+	@echo -e "$(COLOR_GREEN)✅ WIKI RAG knowledge base built!$(COLOR_RESET)"
+
+wiki-rag: stop-port wiki-rag-install ## Start WIKI RAG system with Gradio UI
+	@echo -e "$(COLOR_CYAN)Starting WIKI RAG system...$(COLOR_RESET)"
+	@echo -e "$(COLOR_GREEN)🌐 Gradio interface will be available at: http://localhost:7860$(COLOR_RESET)"
+	python scripts/wiki_rag_system.py
+
+wiki-rag-cli: wiki-rag-install ## Use WIKI RAG CLI for command line queries
+	@echo -e "$(COLOR_CYAN)WIKI RAG CLI Usage:$(COLOR_RESET)"
+	@echo -e "  $(COLOR_GREEN)Query:$(COLOR_RESET) python scripts/wiki_rag_cli.py query 'your question'"
+	@echo -e "  $(COLOR_GREEN)Search:$(COLOR_RESET) python scripts/wiki_rag_cli.py search 'keyword'"  
+	@echo -e "  $(COLOR_GREEN)Stats:$(COLOR_RESET) python scripts/wiki_rag_cli.py stats"
+	@echo -e "  $(COLOR_GREEN)Build:$(COLOR_RESET) python scripts/wiki_rag_cli.py build"
+	@echo ""
+	@echo -e "$(COLOR_CYAN)Example usage:$(COLOR_RESET)"
+	@echo -e "  python scripts/wiki_rag_cli.py query 'Gradioの使い方は？'"
+
+wiki-rag-lite: stop-port ## Start WIKI RAG lite system (no HuggingFace auth required)
+	@echo -e "$(COLOR_CYAN)Starting WIKI RAG Lite system...$(COLOR_RESET)"
+	@echo -e "$(COLOR_GREEN)🌐 Gradio interface will be available at: http://localhost:7860$(COLOR_RESET)"
+	python scripts/wiki_rag_lite.py
+
+wiki-rag-lite-cli: ## Use WIKI RAG Lite CLI for command line queries
+	@echo -e "$(COLOR_CYAN)WIKI RAG Lite CLI Usage:$(COLOR_RESET)"
+	@echo -e "  $(COLOR_GREEN)Query:$(COLOR_RESET) python scripts/wiki_rag_lite_cli.py query 'your question'"
+	@echo -e "  $(COLOR_GREEN)Search:$(COLOR_RESET) python scripts/wiki_rag_lite_cli.py search 'keyword'"  
+	@echo -e "  $(COLOR_GREEN)Stats:$(COLOR_RESET) python scripts/wiki_rag_lite_cli.py stats"
+	@echo -e "  $(COLOR_GREEN)Build:$(COLOR_RESET) python scripts/wiki_rag_lite_cli.py build"
+	@echo ""
+	@echo -e "$(COLOR_CYAN)Example usage:$(COLOR_RESET)"
+	@echo -e "  python scripts/wiki_rag_lite_cli.py query 'Gradioの使い方は？'"
