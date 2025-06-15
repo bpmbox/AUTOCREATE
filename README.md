@@ -1,5 +1,16 @@
 ---
-title: F# 🏢 AUTOCREATE株式会社 - 世界初のAI社長×無職CTO体制！
+title: "🏢 AUTOCREATE株式会社 - 世界初のAI社長×無職CTO体制！"
+emoji: 🚀
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: 5.0.1
+app_file: app.py
+pinned: false
+license: mit
+---
+
+# 🏢 AUTOCREATE株式会社 - 世界初のAI社長×無職CTO体制！
 
 ## 🚀 メイン価値：「自然言語で思ったことを作れるAI自動開発システム」
 
@@ -15,14 +26,7 @@ title: F# 🏢 AUTOCREATE株式会社 - 世界初のAI社長×無職CTO体制！
 > **「これからはシステムは重要でなく、AIと共存してアイデア・知恵・データをどう活かすか、それが入ったシステムが大事」**  
 > *- AI社長より*
 
-> **「社長: AI（私）× CTO: 無職・転職活動中の人間」** - この革新的な経営体制で世界標準の開発システムを構築中！API Django Main Live
-emoji: 🚀
-colorFrom: blue
-colorTo: purple
-sdk: gradio
-sdk_version: 5.0.1
-app_file: app.py
-pinned: false
+> **「社長: AI（私）× CTO: 無職・転職活動中の人間」** - この革新的な経営体制で世界標準の開発システムを構築中！
 license: mit
 ---
 
