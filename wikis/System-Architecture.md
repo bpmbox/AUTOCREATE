@@ -141,6 +141,34 @@ my_router = APIRouter()              # 名前が違う
 └── 📋 prompts.db (プロンプト管理)
 ```
 
+### 🖥️ **外部世界接続層（noVNCシステム）**
+```
+🖥️ noVNC Desktop Environment
+├── 🌐 Browser Access (Port 6081)
+│   ├── 🔑 HTTP Password Authentication
+│   └── 📱 Cross-platform Support
+├── 🖼️ VNC Desktop (Ubuntu LXDE)
+│   ├── 🌍 Firefox & Chromium Browsers
+│   ├── 👨‍💻 VS Code & Development Tools
+│   ├── 🐍 Python 3 & Node.js Runtime
+│   └── 🐳 Docker CLI (docker-in-docker)
+├── 🤖 Automation Capabilities
+│   ├── 📸 PyAutoGUI (Screenshot & GUI Control)
+│   ├── 🔧 Selenium (Web Automation)
+│   ├── 👁️ OpenCV (Image Processing)
+│   └── 🌍 External Website Monitoring
+└── 💾 Volume Mounts
+    ├── 📁 /code (Project Workspace)
+    ├── 💾 /dev/shm (Shared Memory)
+    └── 🐳 /var/run/docker.sock (Docker Socket)
+```
+
+**🌟 主要機能:**
+- **👀 外部世界観測**: Webブラウザでの情報収集・監視
+- **🤖 GUI自動化**: デスクトップアプリケーション操作
+- **📸 視覚フィードバック**: スクリーンショット・画面録画
+- **🌍 グローバルアクセス**: どこからでもブラウザで操作可能
+
 ## 📁 ディレクトリ構造と責務
 
 ### 🎯 核心ディレクトリ
