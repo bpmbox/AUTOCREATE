@@ -66,12 +66,6 @@ AIが実際にこのシステムを体験し、新機能を追加し、その威
 - **メインアプリ**: `http://localhost:7860`
 - **デバッグモード**: `python3 app_debug_server.py`
 
-## 🚀 アクセス方法
-
-### 本番環境
-- **メインアプリ**: `http://localhost:7860`
-- **デバッグモード**: `python3 app_debug_server.py`
-
 ### 利用可能なタブ（自動検出・動的生成）
 - **OpenInterpreter**: AI搭載コード実行チャット 🤖
 - **Chat**: 汎用AIチャット 💬
@@ -83,6 +77,23 @@ AIが実際にこのシステムを体験し、新機能を追加し、その威
 - **_NEW機能_**: controllers/に追加すると自動で表示 ✨
 
 > 💡 **自動機能拡張**: `controllers/gra_XX_newfeature/`フォルダを作成し、`gradio_interface`を定義するだけで新しいタブが自動追加されます！
+
+## 📚 詳細ドキュメント
+
+### 🎨 コンポーネント別ガイド
+- **[Gradioコンポーネント詳細ガイド](./wikis/Gradio-Components-Guide.md)** - 各コンポーネントの実装詳細と問題解決
+- **[Laravel風アーキテクチャ](./wikis/Laravel-Style-Architecture.md)** - システム設計思想
+- **[プロジェクト構造ガイド](./wikis/Project-Structure-Guide.md)** - フォルダー構造の詳細
+- **[開発ガイドライン](./wikis/Development-Guidelines.md)** - 開発手順とベストプラクティス
+
+### 🤖 AI協働開発について
+- **[AI-開発者コラボレーションガイド](./wikis/AI-Developer-Collaboration-Guide.md)** - AIとの効果的な協働方法
+- **[継続性ガイド](./wikis/Continuity-Guide.md)** - AIの引き継ぎとナレッジ継承
+
+### 🔧 技術詳細
+- **[システムアーキテクチャ](./wikis/System-Architecture.md)** - 技術構成の詳細
+- **[実装済み機能一覧](./wikis/Implemented-Features.md)** - 完了済み機能のリスト
+- **[トラブルシューティングガイド](./wikis/Troubleshooting-Guide.md)** - よくある問題と解決策
 
 ## 🔧 セットアップ手順
 

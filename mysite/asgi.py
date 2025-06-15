@@ -69,6 +69,16 @@ try:
     except Exception as e:
         print(f"❌ Failed to load Files interface: {e}")
     
+    # 3. GitHub Issue自動生成 インターフェース (手動追加)
+    try:
+        print("🔄 Loading GitHub Issue Automation interface...")
+        from app.Http.Controllers.Gradio.gra_03_programfromdocs.github_issue_automation import gradio_interface as github_interface
+        gradio_interfaces.append(github_interface)
+        tab_names.append("🤖 GitHub Issue自動生成")
+        print("✅ GitHub Issue Automation interface loaded")
+    except Exception as e:
+        print(f"❌ Failed to load GitHub Issue Automation interface: {e}")
+    
     # TabbedInterfaceを手動で作成
     if gradio_interfaces:
         import gradio as gr
