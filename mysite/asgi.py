@@ -119,6 +119,16 @@ try:
     except Exception as e:
         print(f"❌ Failed to load GitHub Issue Generator interface: {e}")
     
+    # 8. システム監視 インターフェース (手動追加)
+    try:
+        print("🔄 Loading System Monitor interface...")
+        from app.Http.Controllers.Gradio.gra_11_system_monitor.system_monitor import gradio_interface as monitor_interface
+        gradio_interfaces.append(monitor_interface)
+        tab_names.append("🔧 システム監視")
+        print("✅ System Monitor interface loaded")
+    except Exception as e:
+        print(f"❌ Failed to load System Monitor interface: {e}")
+    
     # TabbedInterfaceを手動で作成
     if gradio_interfaces:
         import gradio as gr

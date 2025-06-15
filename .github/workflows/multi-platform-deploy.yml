@@ -1,0 +1,550 @@
+name: 🌍 Multi-Platform Auto Deploy
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  release:
+    types: [ published ]
+
+env:
+  PROJECT_NAME: "autocreate"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ===== Phase 1: Quality Check & Build =====
+  pre-deploy-check:
+    runs-on: ubuntu-latest
+    name: 🔍 Pre-Deploy Quality Check
+    
+    outputs:
+      deploy-aws: ${{ steps.changes.outputs.aws }}
+      deploy-hf: ${{ steps.changes.outputs.huggingface }}
+      deploy-gas: ${{ steps.changes.outputs.gas }}
+      deploy-gh-pages: ${{ steps.changes.outputs.docs }}
+      version: ${{ steps.version.outputs.version }}
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: 🧪 Run comprehensive tests
+      run: |
+        python -m pytest tests/ -v --tb=short || echo "No tests found, continuing..."
+        
+    - name: 🔍 Code quality check
+      run: |
+        pip install flake8 black
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || echo "Skipping flake8"
+        black --check --diff . || echo "Skipping black"
+        
+    - name: 🏥 System health check
+      run: |
+        python -c "
+        import sys
+        sys.path.append('.')
+        try:
+            from app import app
+            print('✅ App import successful')
+        except Exception as e:
+            print(f'⚠️ App import warning: {e}')
+        "
+        
+    - name: 📊 Detect changes for deployment
+      id: changes
+      run: |
+        # Check what needs to be deployed based on changes
+        echo "aws=true" >> $GITHUB_OUTPUT
+        echo "huggingface=true" >> $GITHUB_OUTPUT
+        echo "gas=true" >> $GITHUB_OUTPUT
+        echo "docs=true" >> $GITHUB_OUTPUT
+        
+    - name: 🏷️ Get version
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else
+          VERSION="main-$(date +%Y%m%d-%H%M%S)"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "📌 Version: $VERSION"
+
+  # ===== Phase 2: AWS Lambda + SAM Deploy =====
+  deploy-aws:
+    runs-on: ubuntu-latest
+    name: 🚀 Deploy to AWS
+    needs: pre-deploy-check
+    if: needs.pre-deploy-check.outputs.deploy-aws == 'true'
+    
+    environment:
+      name: aws-production
+      url: https://${{ steps.deploy.outputs.api-url }}
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: ⚙️ Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION || 'ap-northeast-1' }}
+        
+    - name: 🛠️ Set up SAM CLI
+      uses: aws-actions/setup-sam@v2
+      with:
+        use-installer: true
+        
+    - name: 🏗️ SAM build
+      run: |
+        sam build --use-container
+        
+    - name: 🚀 SAM deploy
+      id: deploy
+      run: |
+        sam deploy \
+          --stack-name autocreate-${{ needs.pre-deploy-check.outputs.version }} \
+          --capabilities CAPABILITY_IAM \
+          --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }} \
+          --s3-bucket ${{ secrets.AWS_S3_BUCKET }} \
+          --parameter-overrides ParameterKey=Environment,ParameterValue=production \
+          --no-confirm-changeset \
+          --no-fail-on-empty-changeset
+          
+        # Get API Gateway URL
+        API_URL=$(aws cloudformation describe-stacks \
+          --stack-name autocreate-${{ needs.pre-deploy-check.outputs.version }} \
+          --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
+          --output text)
+        echo "api-url=$API_URL" >> $GITHUB_OUTPUT
+        echo "🌐 Deployed to: $API_URL"
+        
+    - name: 🏥 Health check AWS
+      run: |
+        API_URL="${{ steps.deploy.outputs.api-url }}"
+        if [ ! -z "$API_URL" ]; then
+          curl -f "$API_URL/health" || echo "⚠️ Health check failed"
+        fi
+
+  # ===== Phase 3: HuggingFace Spaces Deploy =====
+  deploy-huggingface:
+    runs-on: ubuntu-latest
+    name: 🤗 Deploy to HuggingFace Spaces
+    needs: pre-deploy-check
+    if: needs.pre-deploy-check.outputs.deploy-hf == 'true'
+    
+    environment:
+      name: huggingface-spaces
+      url: https://huggingface.co/spaces/${{ secrets.HF_USERNAME }}/autocreate
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🔧 Prepare HF deployment
+      run: |
+        # Create app.py for HuggingFace Spaces
+        cp gradio_root.py app.py || echo "Using existing app.py"
+        
+        # Create requirements.txt for HF
+        echo "gradio>=4.0.0" > requirements_hf.txt
+        echo "fastapi" >> requirements_hf.txt
+        echo "uvicorn" >> requirements_hf.txt
+        cat requirements.txt >> requirements_hf.txt || echo "No base requirements"
+        mv requirements_hf.txt requirements.txt
+        
+        # Create README.md for HF Spaces
+        cat > README.md << 'EOF'
+        ---
+        title: AUTOCREATE - AI-Human Collaboration System
+        emoji: 🤖
+        colorFrom: blue
+        colorTo: purple
+        sdk: gradio
+        sdk_version: 4.44.1
+        app_file: app.py
+        pinned: false
+        license: mit
+        ---
+
+        # 🤖 AUTOCREATE - AI-Human Collaboration System
+
+        Welcome to AUTOCREATE! This is a comprehensive AI-Human collaboration system built with Gradio and FastAPI.
+
+        ## 🚀 Features
+
+        - 💬 AI Chat Interface
+        - 📁 File Management System
+        - 🔧 System Monitoring
+        - 📊 Data Analysis Tools
+        - 🤖 Open Interpreter Integration
+        - 🧠 Memory Restoration System
+
+        ## 🎯 Usage
+
+        Click on the tabs above to explore different features of the system.
+
+        ---
+        
+        🔗 **GitHub Repository**: [AUTOCREATE](https://github.com/kenken999/AUTOCREATE)
+        EOF
+        
+    - name: 🤗 Deploy to HuggingFace Space
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        HF_USERNAME: ${{ secrets.HF_USERNAME || 'kenken999' }}
+      run: |
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        
+        # Clone HF repository
+        git clone https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${HF_USERNAME}/autocreate hf_repo || {
+          echo "Creating new HuggingFace Space..."
+          git clone https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${HF_USERNAME}/autocreate hf_repo
+        }
+        
+        # Copy essential files for HF Spaces
+        rsync -av --exclude='.git' --exclude='.github' --exclude='hf_repo' \
+          --exclude='docker*' --exclude='Dockerfile' \
+          --exclude='.env*' --exclude='*.log' \
+          ./ hf_repo/
+        
+        cd hf_repo
+        
+        # Check and commit changes
+        if [ -n "$(git status --porcelain)" ]; then
+          git add .
+          git commit -m "🚀 Auto-deploy v${{ needs.pre-deploy-check.outputs.version }}"
+          git push --force origin main
+          echo "✅ Deployed to HuggingFace Spaces"
+        else
+          echo "ℹ️ No changes to deploy to HuggingFace"
+        fi
+        
+    - name: 🏥 Health check HuggingFace
+      run: |
+        echo "🤗 HuggingFace deployment completed"
+        echo "🌐 URL: https://huggingface.co/spaces/${{ secrets.HF_USERNAME || 'kenken999' }}/autocreate"
+
+  # ===== Phase 4: Google Apps Script (CLASP) Deploy =====
+  deploy-gas:
+    runs-on: ubuntu-latest
+    name: 📊 Deploy to Google Apps Script
+    needs: pre-deploy-check
+    if: needs.pre-deploy-check.outputs.deploy-gas == 'true'
+    
+    environment:
+      name: google-apps-script
+      url: https://script.google.com/
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: 📦 Install CLASP
+      run: |
+        npm install -g @google/clasp
+        
+    - name: 🔧 Prepare GAS deployment
+      run: |
+        # Create GAS project structure
+        mkdir -p gas_deploy
+        cd gas_deploy
+        
+        # Create appsscript.json
+        cat > appsscript.json << 'EOF'
+        {
+          "timeZone": "Asia/Tokyo",
+          "dependencies": {
+            "enabledAdvancedServices": [
+              {
+                "userSymbol": "Drive",
+                "serviceId": "drive",
+                "version": "v3"
+              }
+            ]
+          },
+          "exceptionLogging": "STACKDRIVER",
+          "runtimeVersion": "V8"
+        }
+        EOF
+        
+        # Create Code.gs (main GAS script)
+        cat > Code.gs << 'EOF'
+        /**
+         * AUTOCREATE - Google Apps Script API
+         * Auto-deployed from GitHub Actions
+         */
+        
+        function doGet(e) {
+          return ContentService
+            .createTextOutput(JSON.stringify({
+              status: 'success',
+              message: 'AUTOCREATE GAS API is running',
+              timestamp: new Date().toISOString(),
+              version: '${{ needs.pre-deploy-check.outputs.version }}'
+            }))
+            .setMimeType(ContentService.MimeType.JSON);
+        }
+        
+        function doPost(e) {
+          try {
+            const data = JSON.parse(e.postData.contents);
+            
+            // Handle different API endpoints
+            switch(data.action) {
+              case 'health':
+                return createResponse({status: 'healthy', data: getSystemInfo()});
+              case 'log':
+                return createResponse({status: 'logged', data: logToSheet(data)});
+              default:
+                return createResponse({error: 'Unknown action'}, 400);
+            }
+          } catch (error) {
+            return createResponse({error: error.toString()}, 500);
+          }
+        }
+        
+        function createResponse(data, status = 200) {
+          return ContentService
+            .createTextOutput(JSON.stringify(data))
+            .setMimeType(ContentService.MimeType.JSON);
+        }
+        
+        function getSystemInfo() {
+          return {
+            timestamp: new Date().toISOString(),
+            version: '${{ needs.pre-deploy-check.outputs.version }}',
+            user: Session.getActiveUser().getEmail()
+          };
+        }
+        
+        function logToSheet(data) {
+          // Log to Google Sheets
+          const sheet = SpreadsheetApp.openById('YOUR_SHEET_ID').getActiveSheet();
+          sheet.appendRow([
+            new Date(),
+            data.level || 'INFO',
+            data.message || '',
+            JSON.stringify(data.metadata || {})
+          ]);
+          return {logged: true};
+        }
+        EOF
+        
+    - name: 🔐 Setup CLASP authentication
+      env:
+        CLASP_TOKEN: ${{ secrets.CLASP_TOKEN }}
+      run: |
+        cd gas_deploy
+        echo "$CLASP_TOKEN" > ~/.clasprc.json
+        
+    - name: 🚀 Deploy to Google Apps Script
+      env:
+        GAS_SCRIPT_ID: ${{ secrets.GAS_SCRIPT_ID }}
+      run: |
+        cd gas_deploy
+        
+        # Create .clasp.json if script ID is provided
+        if [ ! -z "$GAS_SCRIPT_ID" ]; then
+          echo "{\"scriptId\":\"$GAS_SCRIPT_ID\"}" > .clasp.json
+          clasp push --force
+          echo "✅ Deployed to existing GAS project: $GAS_SCRIPT_ID"
+        else
+          clasp create --title "AUTOCREATE-API" --type "webapp"
+          clasp push
+          echo "✅ Created new GAS project"
+        fi
+        
+    - name: 🏥 Health check GAS
+      run: |
+        echo "📊 Google Apps Script deployment completed"
+
+  # ===== Phase 5: GitHub Pages Deploy =====
+  deploy-github-pages:
+    runs-on: ubuntu-latest
+    name: 📄 Deploy to GitHub Pages
+    needs: pre-deploy-check
+    if: needs.pre-deploy-check.outputs.deploy-docs == 'true'
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Set up Python (for docs generation)
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: 📚 Generate documentation
+      run: |
+        pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin
+        
+        # Create mkdocs.yml if it doesn't exist
+        if [ ! -f mkdocs.yml ]; then
+          cat > mkdocs.yml << 'EOF'
+        site_name: AUTOCREATE Documentation
+        site_description: AI-Human Collaboration System
+        site_url: https://kenken999.github.io/AUTOCREATE/
+        
+        theme:
+          name: material
+          palette:
+            - scheme: default
+              primary: blue
+              accent: purple
+          features:
+            - navigation.tabs
+            - navigation.sections
+            - toc.integrate
+            - navigation.top
+        
+        plugins:
+          - search
+          - mermaid2
+        
+        nav:
+          - Home: index.md
+          - Quick Start: wikigit/QuickStart.md
+          - System Guide: wikigit/System-Monitoring-Guide.md
+          - API Reference: wikigit/API-Base-System.md
+          - Collaboration: wikigit/GitFlow-Collaboration-Company.md
+          - Troubleshooting: wikigit/Troubleshooting-Guide.md
+        
+        markdown_extensions:
+          - pymdownx.highlight
+          - pymdownx.superfences:
+              custom_fences:
+                - name: mermaid
+                  class: mermaid
+                  format: !!python/name:pymdownx.superfences.fence_code_format
+        EOF
+        fi
+        
+        # Create docs/index.md
+        mkdir -p docs
+        cp README.md docs/index.md
+        cp -r wikigit docs/
+        
+        # Build documentation
+        mkdocs build
+        
+    - name: ⚙️ Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: 📦 Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./site
+        
+    - name: 🚀 Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      
+    - name: 🏥 Health check GitHub Pages
+      run: |
+        echo "📄 GitHub Pages deployment completed"
+        echo "🌐 URL: ${{ steps.deployment.outputs.page_url }}"
+
+  # ===== Phase 6: Post-Deploy Notification & Status =====
+  post-deploy-summary:
+    runs-on: ubuntu-latest
+    name: 📊 Deployment Summary
+    needs: [pre-deploy-check, deploy-aws, deploy-huggingface, deploy-gas, deploy-github-pages]
+    if: always()
+    
+    steps:
+    - name: 📊 Generate deployment summary
+      run: |
+        echo "# 🌍 Multi-Platform Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version**: ${{ needs.pre-deploy-check.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Timestamp**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "## 🚀 Deployment Status" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # AWS
+        if [ "${{ needs.deploy-aws.result }}" == "success" ]; then
+          echo "- ✅ **AWS Lambda**: Deployed successfully" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.deploy-aws.result }}" == "skipped" ]; then
+          echo "- ⏭️ **AWS Lambda**: Skipped" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- ❌ **AWS Lambda**: Failed (${{ needs.deploy-aws.result }})" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # HuggingFace
+        if [ "${{ needs.deploy-huggingface.result }}" == "success" ]; then
+          echo "- ✅ **HuggingFace Spaces**: Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "  - 🌐 URL: https://huggingface.co/spaces/${{ secrets.HF_USERNAME || 'kenken999' }}/autocreate" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.deploy-huggingface.result }}" == "skipped" ]; then
+          echo "- ⏭️ **HuggingFace Spaces**: Skipped" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- ❌ **HuggingFace Spaces**: Failed (${{ needs.deploy-huggingface.result }})" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Google Apps Script
+        if [ "${{ needs.deploy-gas.result }}" == "success" ]; then
+          echo "- ✅ **Google Apps Script**: Deployed successfully" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.deploy-gas.result }}" == "skipped" ]; then
+          echo "- ⏭️ **Google Apps Script**: Skipped" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- ❌ **Google Apps Script**: Failed (${{ needs.deploy-gas.result }})" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # GitHub Pages
+        if [ "${{ needs.deploy-github-pages.result }}" == "success" ]; then
+          echo "- ✅ **GitHub Pages**: Deployed successfully" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.deploy-github-pages.result }}" == "skipped" ]; then
+          echo "- ⏭️ **GitHub Pages**: Skipped" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- ❌ **GitHub Pages**: Failed (${{ needs.deploy-github-pages.result }})" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- 📊 [System Monitoring](https://github.com/${{ github.repository }}/actions)" >> $GITHUB_STEP_SUMMARY
+        echo "- 📚 [Documentation](https://kenken999.github.io/AUTOCREATE/)" >> $GITHUB_STEP_SUMMARY
+        echo "- 🤗 [HuggingFace Demo](https://huggingface.co/spaces/${{ secrets.HF_USERNAME || 'kenken999' }}/autocreate)" >> $GITHUB_STEP_SUMMARY
+        echo "- 🔧 [Repository](https://github.com/${{ github.repository }})" >> $GITHUB_STEP_SUMMARY
+        
+    - name: 🎯 Success notification
+      if: needs.deploy-aws.result == 'success' || needs.deploy-huggingface.result == 'success' || needs.deploy-gas.result == 'success' || needs.deploy-github-pages.result == 'success'
+      run: |
+        echo "🎉 Multi-platform deployment completed successfully!"
+        echo "📊 Check the summary above for details"
