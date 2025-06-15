@@ -42,6 +42,13 @@ help:
 	@echo "  test           	Run all tests"
 	@echo "  requirements   	Install Python requirements from requirements.txt"
 	@echo "  clean          	Clean up temporary files and caches"
+	@echo ""
+	@echo "🏢 AI-Human Collaboration Company Commands:"
+	@echo "  gitflow-setup   	Initialize GitFlow collaboration system"
+	@echo "  feature-start   	Start new feature development (usage: make feature-start name=feature-name)"
+	@echo "  feature-finish  	Finish feature development (usage: make feature-finish name=feature-name)"
+	@echo "  collab-commit   	Make collaboration commit (usage: make collab-commit message='commit message')"
+	@echo "  collab-status   	Show collaboration development status"
 
 #Defines a target named install. This target will install the project using Poetry.
 install: poetry-install install-pre-commit farewell
@@ -221,3 +228,54 @@ ci-real-api:
 ci-all:
 	@echo -e "$(COLOR_CYAN)Running all tests (comprehensive + real API + GitHub Issues)...$(COLOR_RESET)"
 	python3 run_complete_ci_pipeline.py
+
+# 🏢 AI-Human Collaboration Company Commands
+.PHONY: gitflow-setup feature-start feature-finish collab-commit collab-status
+
+gitflow-setup:
+	@echo -e "$(COLOR_CYAN)GitFlow協働開発システム初期化...$(COLOR_RESET)"
+	@chmod +x scripts/setup-gitflow-collaboration.sh
+	@./scripts/setup-gitflow-collaboration.sh
+
+feature-start:
+	@if [ -z "$(name)" ]; then \
+		echo -e "$(COLOR_CYAN)使用方法: make feature-start name=機能名$(COLOR_RESET)"; \
+		echo -e "$(COLOR_CYAN)例: make feature-start name=ai-chat-enhancement$(COLOR_RESET)"; \
+		exit 1; \
+	fi
+	@echo -e "$(COLOR_CYAN)新機能開発開始: $(name)$(COLOR_RESET)"
+	@git flow feature start $(name)
+	@echo -e "$(COLOR_GREEN)Feature branch 'feature/$(name)' 作成完了$(COLOR_RESET)"
+	@echo -e "$(COLOR_GREEN)協働開発を開始してください！$(COLOR_RESET)"
+
+feature-finish:
+	@if [ -z "$(name)" ]; then \
+		echo -e "$(COLOR_CYAN)使用方法: make feature-finish name=機能名$(COLOR_RESET)"; \
+		echo -e "$(COLOR_CYAN)例: make feature-finish name=ai-chat-enhancement$(COLOR_RESET)"; \
+		exit 1; \
+	fi
+	@echo -e "$(COLOR_CYAN)機能開発完了: $(name)$(COLOR_RESET)"
+	@git flow feature finish $(name)
+	@echo -e "$(COLOR_GREEN)Feature branch 'feature/$(name)' マージ完了$(COLOR_RESET)"
+	@echo -e "$(COLOR_GREEN)Wiki文書化を忘れずに！$(COLOR_RESET)"
+
+collab-commit:
+	@if [ -z "$(message)" ]; then \
+		echo -e "$(COLOR_CYAN)使用方法: make collab-commit message='コミットメッセージ'$(COLOR_RESET)"; \
+		echo -e "$(COLOR_CYAN)例: make collab-commit message='AIチャット機能改善'$(COLOR_RESET)"; \
+		exit 1; \
+	fi
+	@echo -e "$(COLOR_CYAN)協働開発コミット実行...$(COLOR_RESET)"
+	@git add .
+	@git commit -m "ai-collab: $(message)"
+	@echo -e "$(COLOR_GREEN)協働開発コミット完了: $(message)$(COLOR_RESET)"
+
+collab-status:
+	@echo -e "$(COLOR_CYAN)協働開発状況確認...$(COLOR_RESET)"
+	@echo -e "$(COLOR_GREEN)Current branch:$(COLOR_RESET) $$(git branch --show-current)"
+	@echo -e "$(COLOR_GREEN)Recent commits:$(COLOR_RESET)"
+	@git log --oneline -5
+	@echo -e "$(COLOR_GREEN)Pending changes:$(COLOR_RESET)"
+	@git status --short
+	@echo -e "$(COLOR_GREEN)GitFlow features:$(COLOR_RESET)"
+	@git branch | grep feature/ || echo "  No active feature branches"
