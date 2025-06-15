@@ -49,6 +49,11 @@ help:
 	@echo "  feature-finish  	Finish feature development (usage: make feature-finish name=feature-name)"
 	@echo "  collab-commit   	Make collaboration commit (usage: make collab-commit message='commit message')"
 	@echo "  collab-status   	Show collaboration development status"
+	@echo ""
+	@echo "📋 GitHub Issue生成コマンド:"
+	@echo "  generate-issues   	戦略的インデックスからGitHub Issuesを生成"
+	@echo "  list-issues        	現在のGitHub Issues一覧を表示"
+	@echo "  close-completed-issues	完了済みIssueをクローズ"
 
 #Defines a target named install. This target will install the project using Poetry.
 install: poetry-install install-pre-commit farewell
@@ -279,3 +284,21 @@ collab-status:
 	@git status --short
 	@echo -e "$(COLOR_GREEN)GitFlow features:$(COLOR_RESET)"
 	@git branch | grep feature/ || echo "  No active feature branches"
+
+# 📋 GitHub Issue生成コマンド
+generate-issues:
+	@echo "🚀 戦略的インデックス → GitHub Issues 生成中..."
+	@python scripts/generate_strategic_issues.py
+	@echo "✅ Issues生成完了"
+	@echo "📊 GitHub Issues: https://github.com/$(GITHUB_USER)/AUTOCREATE/issues"
+
+# Issue管理コマンド
+list-issues:
+	@echo "📋 現在のGitHub Issues一覧"
+	@curl -H "Authorization: token $(GITHUB_TOKEN)" \
+		https://api.github.com/repos/$(GITHUB_USER)/AUTOCREATE/issues | \
+		jq -r '.[] | "[\(.number)] \(.title) - \(.state)"'
+
+close-completed-issues:
+	@echo "✅ 完了済みIssueのクローズ処理"
+	@echo "Phase 1完了Issues (#001-#005) をクローズします"
