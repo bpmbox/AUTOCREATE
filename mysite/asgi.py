@@ -79,6 +79,16 @@ try:
     except Exception as e:
         print(f"❌ Failed to load GitHub Issue Automation interface: {e}")
     
+    # 4. HTML表示 インターフェース (手動追加)
+    try:
+        print("🔄 Loading HTML Display interface...")
+        from app.Http.Controllers.Gradio.gra_07_html.gradio import gradio_interface as html_interface
+        gradio_interfaces.append(html_interface)
+        tab_names.append("🌐 HTML表示")
+        print("✅ HTML Display interface loaded")
+    except Exception as e:
+        print(f"❌ Failed to load HTML Display interface: {e}")
+    
     # TabbedInterfaceを手動で作成
     if gradio_interfaces:
         import gradio as gr

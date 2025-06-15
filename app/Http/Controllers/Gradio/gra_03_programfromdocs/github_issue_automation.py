@@ -80,8 +80,8 @@ class GitHubIssueAutomation:
         self.base_url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}"
         
         # データベース設定
-        self.db_path = "/workspaces/fastapi_django_main_live/github_issues_automation.db"
-        self.prompts_db_path = "/workspaces/fastapi_django_main_live/prompts.db"
+        self.db_path = "/workspaces/AUTOCREATE/database/github_issues_automation.db"
+        self.prompts_db_path = "/workspaces/AUTOCREATE/database/prompts.db"
         
         # 監視設定
         self.monitoring = False
