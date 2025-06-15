@@ -2,8 +2,9 @@ import gradio as gr
 import sys
 import os
 
-# プロジェクトルートをパスに追加
-sys.path.append('/workspaces/fastapi_django_main_live')
+# プロジェクトルートを動的に取得
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(project_root)
 
 from mysite.libs.utilities import chat_with_interpreter, completion, process_file,no_process_file
 from interpreter import interpreter
@@ -21,7 +22,12 @@ from datetime import datetime
 from controllers.gra_03_programfromdocs.system_automation import SystemAutomation
 
 # データベース設定
-DB_PATH = "/workspaces/fastapi_django_main_live/prompts.db"
+try:
+    from config.database import get_db_path
+    DB_PATH = get_db_path('prompts')
+except ImportError:
+    # フォールバック用のパス
+    DB_PATH = os.path.join(project_root, "database", "prompts.db")
 
 def init_db():
     """プロンプトデータベースの初期化"""
@@ -423,7 +429,7 @@ def process_file_and_notify_enhanced(*args, **kwargs):
             repo_name = repo_name.replace('#', '').strip().replace(' ', '-').lower()
             
             # 生成されたフォルダのパス
-            generated_folder = f"/workspaces/fastapi_django_main_live/{folder_name}"
+            generated_folder = os.path.join(project_root, folder_name)
             
             # 自動化パイプライン実行
             automation_result = automation.full_automation_pipeline(

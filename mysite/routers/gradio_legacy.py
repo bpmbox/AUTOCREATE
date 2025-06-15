@@ -125,7 +125,8 @@ def setup_gradio_interfaces_legacy():
         gradio_interfaces, gradio_names = include_gradio_interfaces()
         if gradio_interfaces:
             tabs = gr.TabbedInterface(gradio_interfaces, gradio_names, title="🚀 AI-Human協働開発システム (Legacy)")
-            tabs.queue()
+            # tabs.queue()  # 個別キュー設定を無効化 - 統合起動で管理
+            print("⚠️ Individual queue setup DISABLED for gradio_legacy")
             return tabs
         else:
             return gr.Interface(

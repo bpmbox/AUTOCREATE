@@ -1,4 +1,3 @@
-import duckdb
 import pandas as pd
 from fastapi import FastAPI
 import gradio as gr
@@ -7,17 +6,26 @@ import os
 # データベースディレクトリを作成
 os.makedirs("./workspace", exist_ok=True)
 
-# DuckDB接続をtry-catch文で囲む
+# DuckDB接続の安全な初期化
 try:
+    import duckdb
     con = duckdb.connect(database="./workspace/mydatabase.duckdb")
     con.execute("CREATE TABLE IF NOT EXISTS items (id INTEGER, name VARCHAR);")
     print("✓ Database connection successful")
+except ImportError:
+    print("⚠️ DuckDB not available, using fallback")
+    con = None
 except Exception as e:
     print(f"✗ Database connection failed: {e}")
-    # フォールバック：メモリ内データベースを使用
-    con = duckdb.connect(database=":memory:")
-    con.execute("CREATE TABLE IF NOT EXISTS items (id INTEGER, name VARCHAR);")
-    print("✓ Using in-memory database as fallback")
+    try:
+        # フォールバック：メモリ内データベースを使用
+        import duckdb
+        con = duckdb.connect(database=":memory:")
+        con.execute("CREATE TABLE IF NOT EXISTS items (id INTEGER, name VARCHAR);")
+        print("✓ Using in-memory database as fallback")
+    except Exception as fallback_error:
+        print(f"✗ Fallback database also failed: {fallback_error}")
+        con = None
 
 # Extract the 'content' field from all elements in the result
 def insert(full_response,message):
@@ -27,7 +35,11 @@ def insert(full_response,message):
 
     try:
         # DuckDBに接続（データベースファイルが存在しない場合は新規作成）
-        con = duckdb.connect(database=db_path)
+        if 'duckdb' in globals():
+            con = duckdb.connect(database=db_path)
+        else:
+            print("⚠️ DuckDB not available, skipping database insert")
+            return f"Database not available: {full_response}"
         con.execute(
             """
         CREATE SEQUENCE IF NOT EXISTS sample_id_seq START 1;

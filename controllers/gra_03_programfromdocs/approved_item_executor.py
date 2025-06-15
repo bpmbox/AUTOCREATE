@@ -13,14 +13,20 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-# プロジェクトルートをパスに追加
-sys.path.append('/workspaces/fastapi_django_main_live')
+# プロジェクトルートを動的に取得
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(project_root)
 
 class ApprovedItemExecutor:
     """承認済みアイテムの実行クラス"""
     
     def __init__(self):
-        self.db_path = "/workspaces/fastapi_django_main_live/prompts.db"
+        try:
+            from config.database import get_db_path
+            self.db_path = get_db_path('prompts')
+        except ImportError:
+            # フォールバック用のパス
+            self.db_path = os.path.join(project_root, "database", "prompts.db")
         self.github_token = os.environ.get('GITHUB_TOKEN', '')
         self.google_chat_webhook = os.environ.get('GOOGLE_CHAT_WEBHOOK', '')
     

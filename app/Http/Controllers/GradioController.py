@@ -30,10 +30,41 @@ class GradioController:
     def __init__(self):
         self.gradio_service = GradioInterfaceService()
         self.mounted_apps = {}  # マウントされたアプリケーションを追跡
+        self._check_and_fix_database_paths()
+    
+    def _check_and_fix_database_paths(self):
+        """データベースパスをチェックして修正"""
+        try:
+            from config.database import DATABASE_PATHS
+            import os
+            
+            missing_dbs = []
+            for db_name, db_path in DATABASE_PATHS.items():
+                if not os.path.exists(db_path):
+                    missing_dbs.append(db_name)
+            
+            if missing_dbs:
+                print(f"⚠️ Missing databases detected: {missing_dbs}")
+                self._initialize_missing_databases()
+                
+        except Exception as e:
+            print(f"❌ Database path check failed: {e}")
+    
+    def _initialize_missing_databases(self):
+        """不足しているデータベースを初期化"""
+        try:
+            from database.init_databases import create_databases
+            create_databases()
+            print("✅ Missing databases initialized successfully")
+        except Exception as e:
+            print(f"❌ Database initialization failed: {e}")
     
     def setup_gradio_interfaces(self):
-        """Gradioインターフェースをセットアップする"""
+        """Gradioインターフェースをセットアップする（エラーハンドリング強化）"""
         try:
+            # データベース接続の確認
+            self._verify_database_connections()
+            
             # サービス層でインターフェースを作成
             tabbed_interface = self.gradio_service.create_tabbed_interface()
             
@@ -43,12 +74,29 @@ class GradioController:
         except Exception as e:
             print(f"❌ Error setting up Gradio interfaces: {e}")
             # エラー時のフォールバック
-            return gr.Interface(
-                fn=lambda x: f"Error: {str(e)}",
-                inputs="text",
-                outputs="text",
-                title="🚨 Error - Gradio Setup Failed"
-            )
+            return self._create_fallback_interface(str(e))
+    
+    def _verify_database_connections(self):
+        """データベース接続を検証"""
+        try:
+            from config.database import get_db_connection
+            conn = get_db_connection('chat_history')
+            conn.close()
+            print("✅ Database connection verified")
+        except Exception as e:
+            print(f"⚠️ Database connection issue: {e}")
+            # 再初期化を試行
+            self._initialize_missing_databases()
+    
+    def _create_fallback_interface(self, error_message: str):
+        """フォールバック用のインターフェースを作成"""
+        return gr.Interface(
+            fn=lambda x: f"Gradio Setup Error: {error_message}\n\nPlease check:\n1. Database connections\n2. File paths\n3. Service dependencies",
+            inputs=gr.Textbox(placeholder="Enter any text to see error details..."),
+            outputs="text",
+            title="🚨 Laravel-style Gradio Controller Error",
+            description="This is a fallback interface. Please check the system logs for more details."
+        )
     
     def mount_gradio_to_fastapi(self, app: FastAPI, gradio_interfaces, mount_paths=None):
         """

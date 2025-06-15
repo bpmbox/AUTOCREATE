@@ -1,24 +1,33 @@
 #!/usr/bin/env python3
 """
-FastAPI Laravel-style Application
-=================================
+FastAPI Laravel-style Application with Gradio Integration
+=========================================================
 
-Laravel風のPythonアプリケーション
-Artisanコマンドとともに使用
+Laravel風のPythonアプリケーション + Gradio統合
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1 で起動
 """
 
-from bootstrap.bootstrap_app import create_app
-from config.app import get_config
+import os
+import sys
+from dotenv import load_dotenv
 
-# アプリケーションインスタンス作成
-app = create_app()
+# .envファイルから環境変数を読み込み
+load_dotenv()
 
-# ルーティング設定
-from routes.web import router as web_router
-from routes.api import router as api_router
+# プロジェクトルートをパスに追加
+project_root = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(project_root)
 
-app.include_router(web_router)
-app.include_router(api_router, prefix="/api")
+# Gradio環境変数設定（Gradio 4.31.5 キューエラー防止）
+os.environ['GRADIO_ANALYTICS_ENABLED'] = 'false'
+os.environ['GRADIO_SERVER_HOST'] = '0.0.0.0'
+os.environ['GRADIO_SERVER_PORT'] = '7860'
+
+# app.pyからGradio統合済みFastAPIアプリケーションをインポート
+from app import create_fastapi_with_gradio
+
+# アプリケーションインスタンス作成（Gradio統合済み）
+app = create_fastapi_with_gradio()
 
 @app.get("/")
 async def root():
@@ -26,9 +35,11 @@ async def root():
     ホームページ
     """
     return {
-        "message": f"Welcome to {get_config('app.name')}!",
+        "message": "🚀 FastAPI + Gradio Laravel-style Application",
         "version": "1.0.0",
-        "environment": get_config('app.env')
+        "gradio_url": "/gradio",
+        "api_docs": "/docs",
+        "environment": os.getenv('APP_ENV', 'development')
     }
 
 @app.get("/health")
@@ -38,16 +49,25 @@ async def health_check():
     """
     return {
         "status": "ok",
-        "app": get_config('app.name'),
-        "environment": get_config('app.env')
+        "app": "FastAPI + Gradio Laravel-style App",
+        "gradio_status": "enabled",
+        "environment": os.getenv('APP_ENV', 'development')
     }
 
 if __name__ == "__main__":
     import uvicorn
     
+    print("🚀 Starting FastAPI + Gradio Laravel-style Application...")
+    print("📱 Gradio UI: http://localhost:8000/gradio")
+    print("🔧 API docs: http://localhost:8000/docs")
+    print("🏠 Home: http://localhost:8000/")
+    print("=" * 50)
+    
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=get_config('app.debug')
+        workers=1,
+        reload=False,  # Gradioとの相性を考慮してreloadは無効
+        log_level="info"
     )
