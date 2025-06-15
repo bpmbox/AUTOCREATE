@@ -99,6 +99,16 @@ try:
     except Exception as e:
         print(f"❌ Failed to load OpenInterpreter interface: {e}")
     
+    # 6. AI記憶復元システム (手動追加)
+    try:
+        print("🔄 Loading Memory Restore interface...")
+        from app.Http.Controllers.Gradio.gra_15_memory_restore.memory_restore import gradio_interface as memory_interface
+        gradio_interfaces.append(memory_interface)
+        tab_names.append("🧠 記憶復元")
+        print("✅ Memory Restore interface loaded")
+    except Exception as e:
+        print(f"❌ Failed to load Memory Restore interface: {e}")
+    
     # TabbedInterfaceを手動で作成
     if gradio_interfaces:
         import gradio as gr
