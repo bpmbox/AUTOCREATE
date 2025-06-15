@@ -1,4 +1,18 @@
-# 📚 FastAPI Django Main Live Wiki
+# 📚 FastAPI### 🛠️ 技術ガイド
+- **[🛠️ Development Guidelines](Development-Guidelines)** 🆕 Laravel風統一計画
+- [🎨 Jinja2 Template Integration](Jinja2-Template-Integration)
+- [🏗️ Laravel-Style Architecture](Laravel-Style-Architecture)
+- [📁 Project Structure Guide](Project-Structure-Guide)
+- [🎨 Artisan CLI Guide](Artisan-CLI-Guide)
+- [🤖 AI Developer Collaboration Guide](AI-Developer-Collaboration-Guide)
+
+### 🔧 特別機能ガイド
+- **[🖥️ noVNC Browser Desktop Guide](NoVNC-Browser-Desktop-Guide)** 🆕 PCレス・外部世界接続
+- [🤖 OpenInterpreter Integration Guide](OpenInterpreter-Integration-Guide)
+- [🧠 Memory Restore System Guide](Memory-Restore-System-Guide)
+- [🌐 GitHub Issue System Generator Guide](GitHub-Issue-System-Generator-Guide)
+- [🎨 Gradio Components Guide](Gradio-Components-Guide)
+- [🔧 Troubleshooting Guide](Troubleshooting-Guide) Main Live Wiki
 
 ## 📖 ドキュメント
 

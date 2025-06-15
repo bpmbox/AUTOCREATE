@@ -338,6 +338,46 @@ async def feature_endpoint():
 
 ## 🤖 AI機能
 
+## 🖥️ **PCレス・ブラウザ操作・外部世界接続**
+
+### 🌐 noVNC Webデスクトップ環境
+**外部世界への「目と耳」を提供する革命的システム**
+
+このプロジェクトには、ブラウザだけで完全なLinuxデスクトップ環境にアクセスできる**noVNCシステム**が統合されています。
+
+#### 🚀 **クイックスタート**
+```bash
+# Webデスクトップ環境を起動
+./start-novnc.sh
+
+# ブラウザでアクセス
+# → http://localhost:6081
+# → パスワード: mypassword
+```
+
+#### 🌟 **主要機能**
+- **👀 ブラウザ操作**: Firefox, Chromium でのWeb閲覧・自動化
+- **📸 スクリーンショット**: GUI操作の自動キャプチャ
+- **🤖 RPA自動化**: PyAutoGUI, Selenium による完全自動化
+- **💻 フル開発環境**: VS Code, Python, Node.js, Docker すべて利用可能
+- **🌍 世界アクセス**: どこからでもブラウザでデスクトップ操作
+
+#### 📁 **関連ファイル**
+- `docker-compose-novnc.yml` - メインの設定ファイル
+- `start-novnc.sh` - 起動スクリプト
+- `stop-novnc.sh` - 停止・クリーンアップスクリプト
+- `test-novnc.py` - 動作確認・自動化テスト
+
+#### 🔗 **詳細ガイド**
+**📖 [noVNC Webブラウザデスクトップ完全ガイド](./wikis/NoVNC-Browser-Desktop-Guide.md)**
+- 使用方法、設定、トラブルシューティング
+- Web自動化、スクリーンショット、GUI操作
+- 外部世界との接続・監視・相互作用の実例
+
+> 💡 **真の外部世界接続**: このnoVNCシステムにより、AIプロジェクトに「外部世界を見る目」と「操作する手」が追加され、完全な自動化・監視・相互作用が可能になります。
+
+---
+
 ## 🤖 AI機能
 
 ### Groq AI統合
@@ -558,6 +598,7 @@ AI: ブログに画像アップロード機能を統合します。
 ## 🔗 関連ドキュメント
 
 - **📝 [AI視点システム分析レポート](docs/AI.md)**: AIによる詳細システム分析（推奨）
+- **🖥️ [noVNC Webブラウザデスクトップガイド](./wikis/NoVNC-Browser-Desktop-Guide.md)**: PCレス・外部世界接続完全ガイド（**NEW!**）
 - **[完全セットアップガイド](docs/DEBUG_SETUP_GUIDE.md)**: 詳細な環境構築手順
 - **[Docker環境セットアップ](docs/README-Docker.md)**: Docker環境での構築手順
 - **[マルチモーダル機能レポート](docs/MULTIMODAL_SUCCESS_REPORT.md)**: 画像・音声処理機能の詳細
