@@ -109,6 +109,16 @@ try:
     except Exception as e:
         print(f"❌ Failed to load Memory Restore interface: {e}")
     
+    # 7. GitHub Issue システム生成 (手動追加)
+    try:
+        print("🔄 Loading GitHub Issue Generator interface...")
+        from app.Http.Controllers.Gradio.gra_github_issue_generator.main_interface import gradio_interface as issue_generator_interface
+        gradio_interfaces.append(issue_generator_interface)
+        tab_names.append("🌐 Issue自動対応")
+        print("✅ GitHub Issue Generator interface loaded")
+    except Exception as e:
+        print(f"❌ Failed to load GitHub Issue Generator interface: {e}")
+    
     # TabbedInterfaceを手動で作成
     if gradio_interfaces:
         import gradio as gr
