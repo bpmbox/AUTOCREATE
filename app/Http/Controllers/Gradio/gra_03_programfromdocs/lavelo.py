@@ -79,8 +79,8 @@ def get_memories_from_supabase(memory_type: str = None, limit: int = 50) -> List
                 
                 memory_data = {
                     'id': row['id'],
-                    'title': f"[{row.get('group_name', 'general')}] {row['messages'][:50]}...",
-                    'content': row['messages'],
+                    'title': f"[{row.get('group_name', 'general')}] {(row.get('messages') or '')[:50]}...",
+                    'content': row.get('messages', ''),
                     'memory_type': row.get('group_name', 'general'),
                     'importance_score': importance_score,
                     'tags': [row.get('targetid', 'general')],
@@ -124,8 +124,8 @@ def search_memories_in_supabase(query: str, limit: int = 20) -> List[dict]:
             
             memory_data = {
                 'id': row['id'],
-                'title': f"🔍 {row['messages'][:40]}...",
-                'content': row['messages'],
+                'title': f"🔍 {(row.get('messages') or '')[:40]}...",
+                'content': row.get('messages', ''),
                 'memory_type': row.get('group_name', 'general'),
                 'importance_score': importance_score,
                 'tags': [row.get('targetid', 'general')],
@@ -185,7 +185,7 @@ def get_prompt_by_memory_id(memory_id: int) -> Tuple[str, str, str, str]:
         
         if result.data:
             row = result.data[0]
-            content = row['messages']
+            content = row.get('messages', '')
             
             # タイトルを生成
             title = content[:50] if content else "プロンプト"
@@ -296,7 +296,8 @@ def get_prompts() -> List[Tuple]:
         
         prompts = []
         for row in result.data:
-            title = row['messages'][:50] if row['messages'] else "プロンプト"
+            messages = row.get('messages', '')
+            title = messages[:50] if messages else "プロンプト"
             
             # 従来の形式に変換
             prompts.append((
@@ -385,7 +386,7 @@ def update_prompt_display():
             table_data = []
             for memory in memories:
                 # 日時の表示を短くする
-                date_str = memory.get('created_at', '')[:16] if memory.get('created_at') else ""
+                date_str = (memory.get('created_at') or '')[:16] if memory.get('created_at') else ""
                 
                 # システムタイプのアイコンを追加
                 memory_type = memory.get('memory_type', 'general')
@@ -414,12 +415,12 @@ def update_prompt_display():
                     status_icon = '📋'  # 低重要度
                 
                 # タグ表示
-                tags = memory.get('tags', [])
-                tag_display = ', '.join(tags[:3]) if tags else '未分類'
+                tags = memory.get('tags', []) or []
+                tag_display = ', '.join(str(tag) for tag in tags[:3]) if tags else '未分類'
                 
                 table_data.append([
                     memory['id'], 
-                    f"{type_icon} {memory['title']}", 
+                    f"{type_icon} {memory.get('title', '無題')}", 
                     tag_display,
                     f"{status_icon} {importance}点",
                     date_str
@@ -445,7 +446,7 @@ def search_prompts_display(query: str):
         if memories:
             table_data = []
             for memory in memories:
-                date_str = memory.get('created_at', '')[:16] if memory.get('created_at') else ""
+                date_str = (memory.get('created_at') or '')[:16] if memory.get('created_at') else ""
                 memory_type = memory.get('memory_type', 'general')
                 importance = memory.get('importance_score', 0)
                 
@@ -465,7 +466,7 @@ def search_prompts_display(query: str):
                 
                 table_data.append([
                     memory['id'],
-                    f"{search_icon} {type_icon} {memory['title']}",
+                    f"{search_icon} {type_icon} {memory.get('title', '無題')}",
                     f"重要度: {importance}",
                     f"タイプ: {memory_type}",
                     date_str
