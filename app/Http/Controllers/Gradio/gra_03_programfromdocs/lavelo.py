@@ -16,238 +16,461 @@ from typing import List, Optional, Tuple
 from mysite.interpreter.process import no_process_file,process_file,process_nofile
 #from controllers.gra_04_database.rides import test_set_lide
 import requests
-import sqlite3
 import os
 from datetime import datetime
 from controllers.gra_03_programfromdocs.system_automation import SystemAutomation
 
-# データベース設定
-import os
-import sys
-
-# プロジェクトルートを取得
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.join(current_dir, '..', '..', '..', '..')
-sys.path.append(project_root)
-
+# 記憶自動化システムの統合
 try:
-    from config.database import get_db_path
-    DB_PATH = get_db_path('prompts')
-except ImportError:
-    # フォールバック用のパス
-    DB_PATH = os.path.join(project_root, "database", "prompts.db")
-    # ディレクトリが存在しない場合は作成
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    from memory_automation_system import MemoryAutomationSystem, Memory
+    MEMORY_SYSTEM_AVAILABLE = True
+    print("✅ Memory automation system imported successfully")
+except ImportError as e:
+    print(f"⚠️ Memory automation system not available: {e}")
+    MEMORY_SYSTEM_AVAILABLE = False
 
-def init_db():
-    """プロンプトデータベースの初期化"""
+# Supabase接続（記憶管理システム用）
+try:
+    from supabase import create_client, Client
+    SUPABASE_URL = os.getenv('SUPABASE_URL', 'YOUR_SUPABASE_URL')
+    SUPABASE_KEY = os.getenv('SUPABASE_KEY', 'YOUR_SUPABASE_KEY')
+    SUPABASE_AVAILABLE = SUPABASE_URL != 'YOUR_SUPABASE_URL' and SUPABASE_KEY != 'YOUR_SUPABASE_KEY'
+    if SUPABASE_AVAILABLE:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("✅ Supabase connection established for memory integration")
+    else:
+        print("⚠️ Supabase credentials not configured")
+        supabase = None
+except ImportError:
+    print("⚠️ Supabase client not available")
+    SUPABASE_AVAILABLE = False
+    supabase = None
+
+# Supabase記憶管理機能
+def get_memories_from_supabase(memory_type: str = None, limit: int = 50) -> List[dict]:
+    """Supabaseのchat_historyテーブルから記憶を取得"""
+    if not SUPABASE_AVAILABLE or not supabase:
+        print("⚠️ Supabase not available, falling back to local storage")
+        return get_prompts_local()
+    
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        query = supabase.table('chat_history').select('*')
         
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS prompts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                github_url TEXT,
-                repository_name TEXT,
-                system_type TEXT DEFAULT 'general',
-                content TEXT NOT NULL,
-                execution_status TEXT DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+        # 記憶タイプでフィルタ
+        if memory_type and memory_type != "all":
+            query = query.eq('memory_type', memory_type)
         
-        # デフォルトプロンプトの追加（初回のみ）
-        cursor.execute('SELECT COUNT(*) FROM prompts')
-        if cursor.fetchone()[0] == 0:
-            default_prompts = [
-                ("社員プロフィールシステム", "", "", "web_system", "社員プロフィール管理システム\n- ユーザー登録\n- プロフィール編集\n- 検索機能\n- 管理機能"),
-                ("FastAPI + SQLAlchemy", "", "", "api_system", "FastAPIとSQLAlchemyを使用したAPIの作成\n- ユーザー管理\n- 認証機能\n- CRUD操作"),
-                ("Gradio Interface", "", "", "interface_system", "Gradioインターフェースの作成\n- ファイルアップロード\n- チャット機能\n- データ表示"),
-                ("LINE画像検索システム", "", "", "line_system", "LINEからの画像を検索するシステム\n- doPost受信\n- 画像保存\n- S3アップロード\n- シークレット管理"),
-            ]
+        # 重要度でソート
+        query = query.order('importance_score', desc=True).order('created_at', desc=True).limit(limit)
+        
+        result = query.execute()
+        
+        if result.data:
+            # プロンプト形式に変換
+            memories = []
+            for row in result.data:
+                memory_data = {
+                    'id': row['id'],
+                    'title': f"[{row.get('memory_type', 'general')}] {row['message'][:50]}...",
+                    'content': row['message'],
+                    'memory_type': row.get('memory_type', 'general'),
+                    'importance_score': row.get('importance_score', 0),
+                    'tags': row.get('tags', []),
+                    'created_at': row['created_at'],
+                    'github_url': '',
+                    'repository_name': '',
+                    'system_type': row.get('memory_type', 'general'),
+                    'execution_status': 'available'
+                }
+                memories.append(memory_data)
             
-            for title, github_url, repo_name, system_type, content in default_prompts:
-                cursor.execute(
-                    'INSERT INTO prompts (title, github_url, repository_name, system_type, content) VALUES (?, ?, ?, ?, ?)',
-                    (title, github_url, repo_name, system_type, content)
-                )
+            print(f"✅ Supabase memories retrieved: {len(memories)} items")
+            return memories
+        else:
+            print("ℹ️ No memories found in Supabase")
+            return []
+            
+    except Exception as e:
+        print(f"❌ Supabase memory retrieval error: {e}")
+        return get_prompts_local()
+
+def search_memories_in_supabase(query: str, limit: int = 20) -> List[dict]:
+    """Supabaseで記憶を検索"""
+    if not SUPABASE_AVAILABLE or not supabase:
+        return []
+    
+    try:
+        # 全文検索
+        result = supabase.table('chat_history').select('*').text_search(
+            'message', query
+        ).order('importance_score', desc=True).limit(limit).execute()
         
-        conn.commit()
-        conn.close()
-        print("✅ プロンプトデータベース初期化完了")
+        memories = []
+        for row in result.data:
+            memory_data = {
+                'id': row['id'],
+                'title': f"🔍 {row['message'][:40]}...",
+                'content': row['message'],
+                'memory_type': row.get('memory_type', 'general'),
+                'importance_score': row.get('importance_score', 0),
+                'tags': row.get('tags', []),
+                'created_at': row['created_at'],
+                'system_type': row.get('memory_type', 'general')
+            }
+            memories.append(memory_data)
+        
+        print(f"✅ Memory search results: {len(memories)} items")
+        return memories
         
     except Exception as e:
-        print(f"❌ データベース初期化エラー: {e}")
+        print(f"❌ Memory search error: {e}")
+        return []
 
-def save_prompt(title: str, content: str, github_url: str = "", system_type: str = "general") -> str:
-    """プロンプトを保存"""
+def save_prompt_to_supabase(title: str, content: str, memory_type: str = "prompt", 
+                           importance_score: int = 70, tags: List[str] = None) -> str:
+    """プロンプトをSupabaseの記憶として保存"""
+    if not SUPABASE_AVAILABLE or not supabase:
+        return save_prompt_local(title, content)
+    
     try:
         if not title.strip() or not content.strip():
             return "❌ タイトルと内容は必須です"
         
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        # 記憶データを準備
+        memory_data = {
+            'user_id': 'lavelo_system',
+            'message': f"Prompt: {title}\n\n{content}",
+            'memory_type': memory_type,
+            'importance_score': importance_score,
+            'tags': tags or ['prompt', 'lavelo', 'system-generation'],
+            'related_memories': {'source': 'lavelo_ai'},
+            'memory_metadata': {
+                'title': title,
+                'source': 'lavelo_ai',
+                'created_by': 'prompt_management_system'
+            }
+        }
         
-        # GitHubURLからリポジトリ名を抽出
-        repo_name = ""
-        if github_url:
-            repo_name = github_url.split('/')[-1].replace('.git', '') if github_url.endswith('.git') else github_url.split('/')[-1]
+        result = supabase.table('chat_history').insert(memory_data).execute()
         
-        cursor.execute(
-            'INSERT INTO prompts (title, github_url, repository_name, system_type, content) VALUES (?, ?, ?, ?, ?)',
-            (title.strip(), github_url.strip(), repo_name, system_type, content.strip())
-        )
-        
-        conn.commit()
-        conn.close()
-        print(f"✅ プロンプト保存: {title} (GitHub: {github_url})")
-        return f"✅ プロンプト「{title}」を保存しました\n📁 リポジトリ: {repo_name}"
-        
+        if result.data:
+            memory_id = result.data[0]['id']
+            print(f"✅ Prompt saved to Supabase: {title} (ID: {memory_id})")
+            return f"✅ プロンプト「{title}」をSupabase記憶として保存しました\n📁 記憶ID: {memory_id}"
+        else:
+            return "❌ Supabase保存に失敗しました"
+            
     except Exception as e:
-        print(f"❌ プロンプト保存エラー: {e}")
+        print(f"❌ Supabase prompt save error: {e}")
         return f"❌ 保存エラー: {e}"
 
-def get_prompts() -> List[Tuple]:
-    """全プロンプトを取得"""
+def get_prompt_by_memory_id(memory_id: int) -> Tuple[str, str, str, str]:
+    """記憶IDからプロンプト詳細を取得"""
+    if not SUPABASE_AVAILABLE or not supabase:
+        return get_prompt_details(memory_id)
+    
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        result = supabase.table('chat_history').select('*').eq('id', memory_id).execute()
         
-        cursor.execute('''
-            SELECT id, title, system_type, repository_name, execution_status, created_at 
-            FROM prompts 
-            ORDER BY created_at DESC
-        ''')
-        prompts = cursor.fetchall()
+        if result.data:
+            row = result.data[0]
+            content = row['message']
+            
+            # メタデータから詳細を取得
+            metadata = row.get('memory_metadata', {})
+            title = metadata.get('title', content[:50])
+            
+            return (
+                content,
+                '',  # github_url
+                row.get('memory_type', 'general'),  # system_type
+                title  # repository_name
+            )
+        else:
+            return "", "", "", ""
+            
+    except Exception as e:
+        print(f"❌ Memory retrieval error: {e}")
+        return "", "", "", ""
+
+def get_prompts_local() -> List[dict]:
+    """Supabaseからプロンプトを取得（フォールバック関数）"""
+    return get_memories_from_supabase(memory_type='prompt', limit=50)
+
+def save_prompt_local(title: str, content: str) -> str:
+    """Supabaseにプロンプトを保存（フォールバック関数）"""
+    return save_prompt_to_supabase(title, content, memory_type='prompt')
+
+# Supabase記憶管理システム
+def init_db():
+    """Supabaseプロンプトデータベースの初期化"""
+    if not SUPABASE_AVAILABLE or not supabase:
+        print("⚠️ Supabase not available for initialization")
+        return
+    
+    try:
+        # デフォルトプロンプトの確認と追加
+        existing_prompts = supabase.table('chat_history').select('id').eq('memory_type', 'prompt').execute()
         
-        conn.close()
-        print(f"✅ プロンプト取得: {len(prompts)}件")
+        if not existing_prompts.data:
+            print("📝 Adding default prompts to Supabase...")
+            default_prompts = [
+                {
+                    'title': "社員プロフィールシステム",
+                    'content': "社員プロフィール管理システム\n- ユーザー登録\n- プロフィール編集\n- 検索機能\n- 管理機能",
+                    'system_type': "web_system"
+                },
+                {
+                    'title': "FastAPI + SQLAlchemy",
+                    'content': "FastAPIとSQLAlchemyを使用したAPIの作成\n- ユーザー管理\n- 認証機能\n- CRUD操作",
+                    'system_type': "api_system"
+                },
+                {
+                    'title': "Gradio Interface",
+                    'content': "Gradioインターフェースの作成\n- ファイルアップロード\n- チャット機能\n- データ表示",
+                    'system_type': "interface_system"
+                },
+                {
+                    'title': "LINE画像検索システム",
+                    'content': "LINEからの画像を検索するシステム\n- doPost受信\n- 画像保存\n- S3アップロード\n- シークレット管理",
+                    'system_type': "line_system"
+                },
+            ]
+            
+            for prompt_data in default_prompts:
+                save_prompt_to_supabase(
+                    title=prompt_data['title'],
+                    content=prompt_data['content'],
+                    memory_type='prompt',
+                    importance_score=75,
+                    tags=['default', 'system', prompt_data['system_type']]
+                )
+        
+        print("✅ Supabaseプロンプトデータベース初期化完了")
+        
+    except Exception as e:
+        print(f"❌ Supabase初期化エラー: {e}")
+
+def save_prompt(title: str, content: str, github_url: str = "", system_type: str = "general") -> str:
+    """プロンプトをSupabaseに保存（統一インターフェース）"""
+    # GitHubURLが指定されている場合は、それも含めて保存
+    full_content = content
+    if github_url:
+        full_content += f"\n\nGitHub Repository: {github_url}"
+    
+    # タグを準備
+    tags = ['prompt', system_type]
+    if github_url:
+        repo_name = github_url.split('/')[-1].replace('.git', '') if github_url.endswith('.git') else github_url.split('/')[-1]
+        tags.append(repo_name)
+    
+    return save_prompt_to_supabase(
+        title=title,
+        content=full_content,
+        memory_type='prompt',
+        importance_score=70,
+        tags=tags
+    )
+
+def get_prompts() -> List[Tuple]:
+    """Supabaseから全プロンプトを取得（従来インターフェース互換）"""
+    if not SUPABASE_AVAILABLE or not supabase:
+        print("⚠️ Supabase not available")
+        return []
+    
+    try:
+        # プロンプトタイプの記憶を取得
+        result = supabase.table('chat_history').select('*').eq('memory_type', 'prompt').order('created_at', desc=True).execute()
+        
+        prompts = []
+        for row in result.data:
+            metadata = row.get('memory_metadata', {})
+            title = metadata.get('title', row['message'][:50])
+            
+            # 従来の形式に変換
+            prompts.append((
+                row['id'],  # id
+                title,  # title
+                row.get('memory_type', 'prompt'),  # system_type
+                ', '.join(row.get('tags', [])[:2]),  # repository_name (タグで代用)
+                'available',  # execution_status
+                row['created_at']  # created_at
+            ))
+        
+        print(f"✅ Supabaseプロンプト取得: {len(prompts)}件")
         return prompts
     except Exception as e:
-        print(f"❌ プロンプト取得エラー: {e}")
+        print(f"❌ Supabaseプロンプト取得エラー: {e}")
         return []
 
 def get_prompt_content(prompt_id: int) -> str:
-    """指定IDのプロンプト内容を取得"""
+    """Supabaseから指定IDのプロンプト内容を取得"""
+    if not SUPABASE_AVAILABLE or not supabase:
+        print("⚠️ Supabase not available")
+        return ""
+    
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        result = supabase.table('chat_history').select('message').eq('id', prompt_id).execute()
         
-        cursor.execute('SELECT content FROM prompts WHERE id = ?', (prompt_id,))
-        result = cursor.fetchone()
-        
-        conn.close()
-        
-        if result:
-            print(f"✅ プロンプト内容取得: ID {prompt_id}")
-            return result[0]
+        if result.data:
+            print(f"✅ Supabaseプロンプト内容取得: ID {prompt_id}")
+            return result.data[0]['message']
         else:
             print(f"❌ プロンプトが見つかりません: ID {prompt_id}")
             return ""
             
     except Exception as e:
-        print(f"❌ プロンプト内容取得エラー: {e}")
+        print(f"❌ Supabaseプロンプト内容取得エラー: {e}")
         return ""
 
 def get_prompt_details(prompt_id: int) -> Tuple[str, str, str, str]:
-    """指定IDのプロンプト詳細を取得"""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT content, github_url, system_type, repository_name 
-            FROM prompts WHERE id = ?
-        ''', (prompt_id,))
-        result = cursor.fetchone()
-        
-        conn.close()
-        
-        if result:
-            return result
-        else:
-            return "", "", "", ""
-            
-    except Exception as e:
-        print(f"❌ プロンプト詳細取得エラー: {e}")
-        return "", "", "", ""
+    """Supabaseから指定IDのプロンプト詳細を取得"""
+    return get_prompt_by_memory_id(prompt_id)
 
 def update_execution_status(prompt_id: int, status: str) -> None:
-    """実行ステータスを更新"""
+    """Supabaseで実行ステータスを更新"""
+    if not SUPABASE_AVAILABLE or not supabase:
+        print("⚠️ Supabase not available for status update")
+        return
+    
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        # メタデータを更新
+        result = supabase.table('chat_history').select('memory_metadata').eq('id', prompt_id).execute()
         
-        cursor.execute(
-            'UPDATE prompts SET execution_status = ?, updated_at = ? WHERE id = ?',
-            (status, datetime.now().isoformat(), prompt_id)
-        )
-        
-        conn.commit()
-        conn.close()
-        print(f"✅ ステータス更新: ID {prompt_id} -> {status}")
+        if result.data:
+            metadata = result.data[0].get('memory_metadata', {})
+            metadata['execution_status'] = status
+            metadata['updated_at'] = datetime.now().isoformat()
+            
+            supabase.table('chat_history').update({
+                'memory_metadata': metadata
+            }).eq('id', prompt_id).execute()
+            
+            print(f"✅ Supabaseステータス更新: ID {prompt_id} -> {status}")
         
     except Exception as e:
-        print(f"❌ ステータス更新エラー: {e}")
+        print(f"❌ Supabaseステータス更新エラー: {e}")
 
 def delete_prompt(prompt_id: int) -> str:
-    """プロンプトを削除"""
+    """Supabaseからプロンプトを削除"""
+    if not SUPABASE_AVAILABLE or not supabase:
+        return "❌ Supabase接続エラー"
+    
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        result = supabase.table('chat_history').delete().eq('id', prompt_id).execute()
         
-        cursor.execute('DELETE FROM prompts WHERE id = ?', (prompt_id,))
-        
-        if cursor.rowcount > 0:
-            conn.commit()
-            conn.close()
-            print(f"✅ プロンプト削除: ID {prompt_id}")
+        if result.data:
+            print(f"✅ Supabaseプロンプト削除: ID {prompt_id}")
             return f"✅ プロンプト ID {prompt_id} を削除しました"
         else:
-            conn.close()
             return f"❌ プロンプト ID {prompt_id} が見つかりません"
             
     except Exception as e:
-        print(f"❌ プロンプト削除エラー: {e}")
+        print(f"❌ Supabaseプロンプト削除エラー: {e}")
         return f"❌ 削除エラー: {e}"
 
 def update_prompt_display():
-    """プロンプト一覧の表示を更新"""
-    prompts = get_prompts()
-    if prompts:
-        # テーブル形式でデータを準備
-        table_data = []
-        for prompt_id, title, system_type, repo_name, status, created_at in prompts:
-            # 日時の表示を短くする
-            date_str = created_at[:16] if created_at else ""
-            # システムタイプのアイコンを追加
-            type_icon = {
-                'web_system': '🌐',
-                'api_system': '🔗',
-                'interface_system': '🖥️',
-                'line_system': '📱',
-                'general': '📄'
-            }.get(system_type, '📄')
+    """プロンプト一覧の表示を更新（Supabase統合版）"""
+    try:
+        # Supabaseから記憶を取得
+        memories = get_memories_from_supabase(memory_type=None, limit=50)
+        
+        if memories:
+            # テーブル形式でデータを準備
+            table_data = []
+            for memory in memories:
+                # 日時の表示を短くする
+                date_str = memory.get('created_at', '')[:16] if memory.get('created_at') else ""
+                
+                # システムタイプのアイコンを追加
+                memory_type = memory.get('memory_type', 'general')
+                type_icon = {
+                    'prompt': '📝',
+                    'code': '💻',
+                    'git': '📝',
+                    'file': '📄',
+                    'chat': '💬',
+                    'documentation': '📚',
+                    'web_system': '🌐',
+                    'api_system': '🔗',
+                    'interface_system': '🖥️',
+                    'line_system': '📱',
+                    'general': '📄'
+                }.get(memory_type, '📄')
+                
+                # 重要度による色分け
+                importance = memory.get('importance_score', 0)
+                if importance >= 80:
+                    status_icon = '🔥'  # 高重要度
+                elif importance >= 60:
+                    status_icon = '⭐'  # 中重要度
+                else:
+                    status_icon = '📋'  # 低重要度
+                
+                # タグ表示
+                tags = memory.get('tags', [])
+                tag_display = ', '.join(tags[:3]) if tags else '未分類'
+                
+                table_data.append([
+                    memory['id'], 
+                    f"{type_icon} {memory['title']}", 
+                    tag_display,
+                    f"{status_icon} {importance}点",
+                    date_str
+                ])
             
-            # ステータスのアイコンを追加
-            status_icon = {
-                'pending': '⏳',
-                'running': '🚀',
-                'completed': '✅',
-                'failed': '❌'
-            }.get(status, '⏳')
+            return table_data
+        else:
+            return [["データなし", "", "", "", ""]]
             
-            table_data.append([
-                prompt_id, 
-                f"{type_icon} {title}", 
-                repo_name or "未設定",
-                f"{status_icon} {status}",
-                date_str
-            ])
-        return table_data
+    except Exception as e:
+        print(f"❌ Display update error: {e}")
+        return [["エラー", str(e), "", "", ""]]
+
+def search_prompts_display(query: str):
+    """プロンプト検索結果の表示更新"""
+    try:
+        if not query.strip():
+            return update_prompt_display()
+        
+        # Supabaseで検索
+        memories = search_memories_in_supabase(query, limit=30)
+        
+        if memories:
+            table_data = []
+            for memory in memories:
+                date_str = memory.get('created_at', '')[:16] if memory.get('created_at') else ""
+                memory_type = memory.get('memory_type', 'general')
+                importance = memory.get('importance_score', 0)
+                
+                type_icon = {
+                    'prompt': '📝',
+                    'code': '💻',
+                    'git': '📝',
+                    'file': '📄',
+                    'chat': '💬',
+                    'documentation': '📚',
+                    'general': '📄'
+                }.get(memory_type, '📄')
+                
+                # 検索結果マーク
+                search_icon = '🔍'
+                
+                table_data.append([
+                    memory['id'],
+                    f"{search_icon} {type_icon} {memory['title']}",
+                    f"重要度: {importance}",
+                    f"タイプ: {memory_type}",
+                    date_str
+                ])
+            
+            return table_data
+        else:
+            return [["検索結果なし", f"「{query}」に関する記憶が見つかりませんでした", "", "", ""]]
+            
+    except Exception as e:
+        print(f"❌ Search display error: {e}")
+        return [["検索エラー", str(e), "", "", ""]]
     return []
 
 val = """
@@ -347,14 +570,11 @@ def process_file_and_notify(*args, **kwargs):
     try:
         prompt_content = args[0] if args else ""
         if prompt_content.strip():
-            # プロンプトIDを検索（完全一致で）
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute('SELECT id FROM prompts WHERE content = ?', (prompt_content,))
-            result = cursor.fetchone()
-            if result:
-                update_execution_status(result[0], 'running')
-            conn.close()
+            # Supabaseでプロンプト検索（内容完全一致）
+            if SUPABASE_AVAILABLE and supabase:
+                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                if result.data:
+                    update_execution_status(result.data[0]['id'], 'running')
     except Exception as e:
         print(f"実行前ステータス更新エラー: {e}")
     
@@ -364,7 +584,7 @@ def process_file_and_notify(*args, **kwargs):
     # Google Chatに通知
     send_to_google_chat(f"🚀 システム生成完了\n```\n{result[:500]}...\n```")
     
-    # プロンプト実行後、内容をデータベースに保存・更新
+    # プロンプト実行後、内容をSupabaseに保存・更新
     try:
         prompt_content = args[0] if args else ""
         if prompt_content.strip():
@@ -374,31 +594,25 @@ def process_file_and_notify(*args, **kwargs):
             if title.startswith('#'):
                 title = title[1:].strip()
             
-            # 既存のプロンプトか確認
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute('SELECT id FROM prompts WHERE content = ?', (prompt_content,))
-            existing = cursor.fetchone()
+            # Supabaseで既存のプロンプトか確認
+            if SUPABASE_AVAILABLE and supabase:
+                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                
+                if result.data:
+                    # 既存プロンプトのステータスを更新
+                    update_execution_status(result.data[0]['id'], 'completed')
+                else:
+                    # 新しい実行履歴として保存
+                    save_prompt(f"実行履歴: {title}", prompt_content, "", "execution_log")
             
-            if existing:
-                # 既存プロンプトのステータスを更新
-                update_execution_status(existing[0], 'completed')
-            else:
-                # 新しい実行履歴として保存
-                save_prompt(f"実行履歴: {title}", prompt_content, "", "execution_log")
-            
-            conn.close()
     except Exception as e:
         print(f"実行履歴保存エラー: {e}")
         # エラー時はステータスを失敗に更新
         try:
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute('SELECT id FROM prompts WHERE content = ?', (prompt_content,))
-            result = cursor.fetchone()
-            if result:
-                update_execution_status(result[0], 'failed')
-            conn.close()
+            if SUPABASE_AVAILABLE and supabase:
+                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                if result.data:
+                    update_execution_status(result.data[0]['id'], 'failed')
         except:
             pass
     
@@ -413,14 +627,11 @@ def process_file_and_notify_enhanced(*args, **kwargs):
         github_token = args[2] if len(args) > 2 else ""
         
         if prompt_content.strip():
-            # プロンプトIDを検索（完全一致で）
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute('SELECT id FROM prompts WHERE content = ?', (prompt_content,))
-            result = cursor.fetchone()
-            if result:
-                update_execution_status(result[0], 'running')
-            conn.close()
+            # Supabaseでプロンプト検索（完全一致）
+            if SUPABASE_AVAILABLE and supabase:
+                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                if result.data:
+                    update_execution_status(result.data[0]['id'], 'running')
     except Exception as e:
         print(f"実行前ステータス更新エラー: {e}")
     
@@ -480,31 +691,25 @@ def process_file_and_notify_enhanced(*args, **kwargs):
             if title.startswith('#'):
                 title = title[1:].strip()
             
-            # 既存のプロンプトか確認
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute('SELECT id FROM prompts WHERE content = ?', (prompt_content,))
-            existing = cursor.fetchone()
+            # Supabaseで既存のプロンプトか確認
+            if SUPABASE_AVAILABLE and supabase:
+                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                
+                if result.data:
+                    # 既存プロンプトのステータスを更新
+                    update_execution_status(result.data[0]['id'], 'completed')
+                else:
+                    # 新しい実行履歴として保存
+                    save_prompt(f"実行履歴: {title}", prompt_content, "", "execution_log")
             
-            if existing:
-                # 既存プロンプトのステータスを更新
-                update_execution_status(existing[0], 'completed')
-            else:
-                # 新しい実行履歴として保存
-                save_prompt(f"実行履歴: {title}", prompt_content, "", "execution_log")
-            
-            conn.close()
     except Exception as e:
         print(f"実行履歴保存エラー: {e}")
         # エラー時はステータスを失敗に更新
         try:
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute('SELECT id FROM prompts WHERE content = ?', (prompt_content,))
-            result = cursor.fetchone()
-            if result:
-                update_execution_status(result[0], 'failed')
-            conn.close()
+            if SUPABASE_AVAILABLE and supabase:
+                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                if result.data:
+                    update_execution_status(result.data[0]['id'], 'failed')
         except:
             pass
     
@@ -528,7 +733,7 @@ def load_prompt_to_textbox(evt: gr.SelectData):
 
 # 自動検出システム用のメタデータ
 interface_title = "💾 プロンプト管理システム"
-interface_description = "SQLite3ベースのプロンプト管理とコード生成"
+interface_description = "Supabaseベースのプロンプト管理とコード生成"
 
 # AI用の高度なプロンプトテンプレート
 ai_system_prompts = {
@@ -648,26 +853,29 @@ gradio_interface として作成してください。
 }
 
 def add_ai_system_prompts():
-    """AI用の高度なシステムプロンプトを追加"""
+    """AI用の高度なシステムプロンプトをSupabaseに追加"""
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
+        if not SUPABASE_AVAILABLE or not supabase:
+            print("⚠️ Supabase not available for AI prompts")
+            return
+            
         for title, content in ai_system_prompts.items():
-            # 既存チェック
-            cursor.execute('SELECT id FROM prompts WHERE title LIKE ?', (f"%{title}%",))
-            if not cursor.fetchone():
+            # Supabaseで既存チェック
+            existing = supabase.table('chat_history').select('id').ilike('message', f"%{title}%").execute()
+            
+            if not existing.data:
                 system_type = "ai_generated"
                 github_url = f"https://github.com/ai-systems/{title.replace('_', '-')}"
                 
-                cursor.execute(
-                    'INSERT INTO prompts (title, github_url, repository_name, system_type, content) VALUES (?, ?, ?, ?, ?)',
-                    (f"🤖 AI: {title}", github_url, title.replace('_', '-'), system_type, content)
+                # Supabaseに追加
+                save_prompt_to_supabase(
+                    title=f"🤖 AI: {title}",
+                    content=content,
+                    memory_type='prompt',
+                    importance_score=80,
+                    tags=['ai_generated', system_type, title.replace('_', '-')]
                 )
                 print(f"✅ AI プロンプト追加: {title}")
-        
-        conn.commit()
-        conn.close()
         
     except Exception as e:
         print(f"❌ AI プロンプト追加エラー: {e}")
@@ -777,3 +985,44 @@ with gr.Blocks() as gradio_interface:
         fn=update_prompt_display,
         outputs=prompt_table
     )
+
+if __name__ == "__main__":
+    # データベース初期化
+    init_db()
+    
+    # Gradioアプリケーションの起動
+    print("🚀 Lavelo AI システム起動中...")
+    print("💡 プロンプト管理・システム生成・AI協働システム")
+    print("🌐 アクセス: http://localhost:7860")
+    
+    # Laravelシステムとの連携設定
+    gradio_interface.title = "Lavelo AI - Laravel統合システム"
+    gradio_interface.description = "AI×人間協働開発のためのプロンプト管理・システム生成・自動化システム"
+    
+    # Laravel統合モードで起動
+    gradio_interface.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+        inbrowser=False,
+        debug=True,
+        show_error=True,
+        quiet=False
+    )
+
+# Laravel Controller統合用の関数エクスポート
+def get_gradio_app():
+    """LaravelからGradioアプリを取得する関数"""
+    init_db()
+    return gradio_interface
+
+def run_lavelo_system():
+    """Laravelから直接実行する関数"""
+    if __name__ != "__main__":
+        init_db()
+        return gradio_interface.launch(
+            server_name="0.0.0.0", 
+            server_port=7860,
+            share=False,
+            prevent_thread_lock=True
+        )
