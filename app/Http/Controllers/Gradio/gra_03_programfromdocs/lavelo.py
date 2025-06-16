@@ -60,8 +60,8 @@ def get_memories_from_supabase(memory_type: str = None, limit: int = 50) -> List
         if memory_type and memory_type != "all":
             query = query.eq('memory_type', memory_type)
         
-        # 重要度でソート
-        query = query.order('importance_score', desc=True).order('created_at', desc=True).limit(limit)
+        # 重要度でソート（statusフィールドを使用）
+        query = query.order('created', desc=True).limit(limit)
         
         result = query.execute()
         
@@ -69,17 +69,25 @@ def get_memories_from_supabase(memory_type: str = None, limit: int = 50) -> List
             # プロンプト形式に変換
             memories = []
             for row in result.data:
+                # statusから重要度を抽出
+                importance_score = 70  # デフォルト
+                if row.get('status') and 'importance_' in str(row['status']):
+                    try:
+                        importance_score = int(row['status'].replace('importance_', ''))
+                    except:
+                        pass
+                
                 memory_data = {
                     'id': row['id'],
-                    'title': f"[{row.get('memory_type', 'general')}] {row['message'][:50]}...",
-                    'content': row['message'],
-                    'memory_type': row.get('memory_type', 'general'),
-                    'importance_score': row.get('importance_score', 0),
-                    'tags': row.get('tags', []),
-                    'created_at': row['created_at'],
+                    'title': f"[{row.get('group_name', 'general')}] {row['messages'][:50]}...",
+                    'content': row['messages'],
+                    'memory_type': row.get('group_name', 'general'),
+                    'importance_score': importance_score,
+                    'tags': [row.get('targetid', 'general')],
+                    'created_at': row.get('created'),
                     'github_url': '',
                     'repository_name': '',
-                    'system_type': row.get('memory_type', 'general'),
+                    'system_type': row.get('group_name', 'general'),
                     'execution_status': 'available'
                 }
                 memories.append(memory_data)
@@ -100,22 +108,29 @@ def search_memories_in_supabase(query: str, limit: int = 20) -> List[dict]:
         return []
     
     try:
-        # 全文検索
-        result = supabase.table('chat_history').select('*').text_search(
-            'message', query
-        ).order('importance_score', desc=True).limit(limit).execute()
+        # messagesフィールドで検索
+        result = supabase.table('chat_history').select('*').ilike(
+            'messages', f'%{query}%'
+        ).order('created', desc=True).limit(limit).execute()
         
         memories = []
         for row in result.data:
+            importance_score = 70
+            if row.get('status') and 'importance_' in str(row['status']):
+                try:
+                    importance_score = int(row['status'].replace('importance_', ''))
+                except:
+                    pass
+            
             memory_data = {
                 'id': row['id'],
-                'title': f"🔍 {row['message'][:40]}...",
-                'content': row['message'],
-                'memory_type': row.get('memory_type', 'general'),
-                'importance_score': row.get('importance_score', 0),
-                'tags': row.get('tags', []),
-                'created_at': row['created_at'],
-                'system_type': row.get('memory_type', 'general')
+                'title': f"🔍 {row['messages'][:40]}...",
+                'content': row['messages'],
+                'memory_type': row.get('group_name', 'general'),
+                'importance_score': importance_score,
+                'tags': [row.get('targetid', 'general')],
+                'created_at': row.get('created'),
+                'system_type': row.get('group_name', 'general')
             }
             memories.append(memory_data)
         
@@ -139,17 +154,12 @@ def save_prompt_to_supabase(title: str, content: str, memory_type: str = "prompt
         
         # 記憶データを準備
         memory_data = {
-            'user_id': 'lavelo_system',
-            'message': f"Prompt: {title}\n\n{content}",
-            'memory_type': memory_type,
-            'importance_score': importance_score,
-            'tags': tags or ['prompt', 'lavelo', 'system-generation'],
-            'related_memories': {'source': 'lavelo_ai'},
-            'memory_metadata': {
-                'title': title,
-                'source': 'lavelo_ai',
-                'created_by': 'prompt_management_system'
-            }
+            'ownerid': 'lavelo_system',
+            'messages': f"Prompt: {title}\n\n{content}",
+            'targetid': f'prompt_{memory_type}',
+            'created': datetime.now().isoformat(),
+            'status': f'importance_{importance_score}',
+            'group_name': 'lavelo_prompts'
         }
         
         result = supabase.table('chat_history').insert(memory_data).execute()
@@ -175,16 +185,15 @@ def get_prompt_by_memory_id(memory_id: int) -> Tuple[str, str, str, str]:
         
         if result.data:
             row = result.data[0]
-            content = row['message']
+            content = row['messages']
             
-            # メタデータから詳細を取得
-            metadata = row.get('memory_metadata', {})
-            title = metadata.get('title', content[:50])
+            # タイトルを生成
+            title = content[:50] if content else "プロンプト"
             
             return (
                 content,
                 '',  # github_url
-                row.get('memory_type', 'general'),  # system_type
+                row.get('group_name', 'general'),  # system_type
                 title  # repository_name
             )
         else:
@@ -213,7 +222,7 @@ def init_db():
     
     try:
         # デフォルトプロンプトの確認と追加
-        existing_prompts = supabase.table('chat_history').select('id').eq('memory_type', 'prompt').execute()
+        existing_prompts = supabase.table('chat_history').select('id').eq('group_name', 'lavelo_prompts').execute()
         
         if not existing_prompts.data:
             print("📝 Adding default prompts to Supabase...")
@@ -246,7 +255,7 @@ def init_db():
                     content=prompt_data['content'],
                     memory_type='prompt',
                     importance_score=75,
-                    tags=['default', 'system', prompt_data['system_type']]
+                    tags=[prompt_data['system_type']]
                 )
         
         print("✅ Supabaseプロンプトデータベース初期化完了")
@@ -283,21 +292,20 @@ def get_prompts() -> List[Tuple]:
     
     try:
         # プロンプトタイプの記憶を取得
-        result = supabase.table('chat_history').select('*').eq('memory_type', 'prompt').order('created_at', desc=True).execute()
+        result = supabase.table('chat_history').select('*').eq('group_name', 'lavelo_prompts').order('created', desc=True).execute()
         
         prompts = []
         for row in result.data:
-            metadata = row.get('memory_metadata', {})
-            title = metadata.get('title', row['message'][:50])
+            title = row['messages'][:50] if row['messages'] else "プロンプト"
             
             # 従来の形式に変換
             prompts.append((
                 row['id'],  # id
                 title,  # title
-                row.get('memory_type', 'prompt'),  # system_type
-                ', '.join(row.get('tags', [])[:2]),  # repository_name (タグで代用)
+                row.get('group_name', 'prompt'),  # system_type
+                row.get('targetid', 'general'),  # repository_name (targetidで代用)
                 'available',  # execution_status
-                row['created_at']  # created_at
+                row.get('created', '')  # created_at
             ))
         
         print(f"✅ Supabaseプロンプト取得: {len(prompts)}件")
@@ -337,19 +345,13 @@ def update_execution_status(prompt_id: int, status: str) -> None:
         return
     
     try:
-        # メタデータを更新
-        result = supabase.table('chat_history').select('memory_metadata').eq('id', prompt_id).execute()
+        # ステータスを更新
+        supabase.table('chat_history').update({
+            'status': f'execution_{status}',
+            'status_created': datetime.now().isoformat()
+        }).eq('id', prompt_id).execute()
         
-        if result.data:
-            metadata = result.data[0].get('memory_metadata', {})
-            metadata['execution_status'] = status
-            metadata['updated_at'] = datetime.now().isoformat()
-            
-            supabase.table('chat_history').update({
-                'memory_metadata': metadata
-            }).eq('id', prompt_id).execute()
-            
-            print(f"✅ Supabaseステータス更新: ID {prompt_id} -> {status}")
+        print(f"✅ Supabaseステータス更新: ID {prompt_id} -> {status}")
         
     except Exception as e:
         print(f"❌ Supabaseステータス更新エラー: {e}")
@@ -388,11 +390,12 @@ def update_prompt_display():
                 # システムタイプのアイコンを追加
                 memory_type = memory.get('memory_type', 'general')
                 type_icon = {
+                    'lavelo_prompts': '📝',
                     'prompt': '📝',
                     'code': '💻',
                     'git': '📝',
                     'file': '📄',
-                    'chat': '💬',
+                    'chat': '💬', 
                     'documentation': '📚',
                     'web_system': '🌐',
                     'api_system': '🔗',
@@ -447,6 +450,7 @@ def search_prompts_display(query: str):
                 importance = memory.get('importance_score', 0)
                 
                 type_icon = {
+                    'lavelo_prompts': '📝',
                     'prompt': '📝',
                     'code': '💻',
                     'git': '📝',
@@ -575,7 +579,7 @@ def process_file_and_notify(*args, **kwargs):
         if prompt_content.strip():
             # Supabaseでプロンプト検索（内容完全一致）
             if SUPABASE_AVAILABLE and supabase:
-                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                result = supabase.table('chat_history').select('id').ilike('messages', f'%{prompt_content}%').execute()
                 if result.data:
                     update_execution_status(result.data[0]['id'], 'running')
     except Exception as e:
@@ -599,7 +603,7 @@ def process_file_and_notify(*args, **kwargs):
             
             # Supabaseで既存のプロンプトか確認
             if SUPABASE_AVAILABLE and supabase:
-                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                result = supabase.table('chat_history').select('id').ilike('messages', f'%{prompt_content[:100]}%').execute()
                 
                 if result.data:
                     # 既存プロンプトのステータスを更新
@@ -613,7 +617,7 @@ def process_file_and_notify(*args, **kwargs):
         # エラー時はステータスを失敗に更新
         try:
             if SUPABASE_AVAILABLE and supabase:
-                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                result = supabase.table('chat_history').select('id').ilike('messages', f'%{prompt_content[:100]}%').execute()
                 if result.data:
                     update_execution_status(result.data[0]['id'], 'failed')
         except:
@@ -684,7 +688,7 @@ def process_file_and_notify_enhanced(*args, **kwargs):
         # 従来の通知
         send_to_google_chat(f"🚀 システム生成完了\n```\n{result[:500]}...\n```")
     
-    # プロンプト実行後、内容をデータベースに保存・更新
+    # プロンプト実行後、内容をSupabaseに保存・更新（拡張版）
     try:
         prompt_content = args[0] if args else ""
         if prompt_content.strip():
@@ -696,7 +700,7 @@ def process_file_and_notify_enhanced(*args, **kwargs):
             
             # Supabaseで既存のプロンプトか確認
             if SUPABASE_AVAILABLE and supabase:
-                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                result = supabase.table('chat_history').select('id').ilike('messages', f'%{prompt_content[:100]}%').execute()
                 
                 if result.data:
                     # 既存プロンプトのステータスを更新
@@ -710,7 +714,7 @@ def process_file_and_notify_enhanced(*args, **kwargs):
         # エラー時はステータスを失敗に更新
         try:
             if SUPABASE_AVAILABLE and supabase:
-                result = supabase.table('chat_history').select('id').eq('message', f"Prompt: \n\n{prompt_content}").execute()
+                result = supabase.table('chat_history').select('id').ilike('messages', f'%{prompt_content[:100]}%').execute()
                 if result.data:
                     update_execution_status(result.data[0]['id'], 'failed')
         except:
