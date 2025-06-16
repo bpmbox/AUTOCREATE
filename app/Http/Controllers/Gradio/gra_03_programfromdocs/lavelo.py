@@ -50,8 +50,8 @@ except ImportError:
 def get_memories_from_supabase(memory_type: str = None, limit: int = 50) -> List[dict]:
     """Supabaseのchat_historyテーブルから記憶を取得"""
     if not SUPABASE_AVAILABLE or not supabase:
-        print("⚠️ Supabase not available, falling back to local storage")
-        return get_prompts_local()
+        print("⚠️ Supabase not available, returning empty memory list")
+        return []
     
     try:
         query = supabase.table('chat_history').select('*')
@@ -92,7 +92,7 @@ def get_memories_from_supabase(memory_type: str = None, limit: int = 50) -> List
             
     except Exception as e:
         print(f"❌ Supabase memory retrieval error: {e}")
-        return get_prompts_local()
+        return []
 
 def search_memories_in_supabase(query: str, limit: int = 20) -> List[dict]:
     """Supabaseで記憶を検索"""
@@ -130,7 +130,8 @@ def save_prompt_to_supabase(title: str, content: str, memory_type: str = "prompt
                            importance_score: int = 70, tags: List[str] = None) -> str:
     """プロンプトをSupabaseの記憶として保存"""
     if not SUPABASE_AVAILABLE or not supabase:
-        return save_prompt_local(title, content)
+        print(f"⚠️ Supabase not available, cannot save prompt: {title}")
+        return "❌ Supabase接続が利用できません"
     
     try:
         if not title.strip() or not content.strip():
@@ -194,12 +195,14 @@ def get_prompt_by_memory_id(memory_id: int) -> Tuple[str, str, str, str]:
         return "", "", "", ""
 
 def get_prompts_local() -> List[dict]:
-    """Supabaseからプロンプトを取得（フォールバック関数）"""
-    return get_memories_from_supabase(memory_type='prompt', limit=50)
+    """フォールバック: ローカルの空データを返す"""
+    print("⚠️ Supabase not available, returning empty prompt list")
+    return []
 
 def save_prompt_local(title: str, content: str) -> str:
-    """Supabaseにプロンプトを保存（フォールバック関数）"""
-    return save_prompt_to_supabase(title, content, memory_type='prompt')
+    """フォールバック: ローカル保存メッセージを返す"""
+    print(f"⚠️ Supabase not available, cannot save prompt: {title}")
+    return "❌ Supabase接続が利用できません"
 
 # Supabase記憶管理システム
 def init_db():
