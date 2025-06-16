@@ -98,6 +98,10 @@ class GradioController(HybridController):
             ("controllers", "controllers"),
             ("routers", "routers"),
             ("app.Http.Controllers", "app/Http/Controllers"),
+            ("app.Http.Controllers.Gradio.gra_01_screenshot", "app/Http/Controllers/Gradio/gra_01_screenshot"),
+            ("app.Http.Controllers.Gradio.gra_02_ocr", "app/Http/Controllers/Gradio/gra_02_ocr"),
+            ("app.Http.Controllers.Gradio.gra_03_programfromdocs", "app/Http/Controllers/Gradio/gra_03_programfromdocs"),
+            ("app.Http.Controllers.Gradio.gra_04_memory", "app/Http/Controllers/Gradio/gra_04_memory"),  # 記憶管理タブを追加
         ]
         
         for package_name, package_path in search_dirs:
