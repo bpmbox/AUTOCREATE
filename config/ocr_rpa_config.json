@@ -1,0 +1,58 @@
+{
+  "gas_ocr_api": {
+    "url": "https://script.google.com/macros/s/1ISqaty-oD30b559LXJ5q6dkXYp1H888dxP4uSjK9osgDUm6wDm9rUOOz/exec",
+    "timeout": 30,
+    "retry_attempts": 3
+  },
+  "vnc_settings": {
+    "container_name": "ubuntu-desktop-vnc",
+    "display": ":1",
+    "screenshot_directory": "./screenshots",
+    "reports_directory": "./reports"
+  },
+  "automation_rules": {
+    "page_load_wait_seconds": 3,
+    "screenshot_interval_seconds": 2,
+    "max_retry_attempts": 3,
+    "ocr_confidence_threshold": 0.7,
+    "max_automation_iterations": 10
+  },
+  "kinkaimasu_targets": {
+    "homepage_url": "https://kinkaimasu.jp",
+    "target_data": [
+      "買取価格",
+      "商品カテゴリ",
+      "店舗情報",
+      "査定フォーム",
+      "お客様の声"
+    ],
+    "interaction_goals": [
+      "価格情報収集",
+      "査定フォーム分析",
+      "ナビゲーション構造把握",
+      "ユーザビリティ評価"
+    ]
+  },
+  "demo_scenarios": {
+    "basic_browse": {
+      "description": "基本的なブラウジング自動化",
+      "max_iterations": 5,
+      "target_goal": "navigation_test"
+    },
+    "data_collection": {
+      "description": "価格データ収集",
+      "max_iterations": 8,
+      "target_goal": "data_collection"
+    },
+    "form_analysis": {
+      "description": "査定フォーム解析",
+      "max_iterations": 6,
+      "target_goal": "form_analysis"
+    },
+    "full_analysis": {
+      "description": "完全サイト解析",
+      "max_iterations": 15,
+      "target_goal": "comprehensive_analysis"
+    }
+  }
+}

@@ -1,0 +1,107 @@
+---
+name: 🗂️ GitFlow実践・プロジェクト整理
+about: GitFlow標準プロセスでプロジェクト改善を行う際のテンプレート
+title: '[GITFLOW] '
+labels: ['enhancement', 'gitflow', 'project-structure', 'documentation']
+assignees: ''
+---
+
+## 📋 GitFlow実践チケット
+
+### 🎯 改善目標
+<!-- 何を整理・改善したいか簡潔に記述 -->
+- [ ] ファイル構成の最適化
+- [ ] ディレクトリ構造の標準化
+- [ ] ドキュメント整理
+- [ ] 'うるさい人間'対策 😄
+- [ ] その他: 
+
+### 📊 現状の問題点
+<!-- 現在の問題・改善が必要な理由 -->
+
+### 🗂️ 実施予定作業
+- [ ] **Step 1**: Issue作成（このチケット）
+- [ ] **Step 2**: Feature Branch作成 (`feature/***`)
+- [ ] **Step 3**: ファイル精査・現状確認
+- [ ] **Step 4**: 構造整理・移動・リネーム
+- [ ] **Step 5**: リンク・参照更新
+- [ ] **Step 6**: コミット・プッシュ
+- [ ] **Step 7**: Pull Request作成・レビュー依頼
+
+### 🎯 Feature Branch命名
+```
+feature/project-root-cleanup
+feature/docs-reorganization  
+feature/structure-optimization
+etc...
+```
+
+### ✅ 完了条件（Definition of Done）
+- [ ] ファイル構成が標準的なディレクトリ構造に準拠
+- [ ] README.md以外のMDファイルが適切なフォルダに配置
+- [ ] 関連ファイルのリンクが正しく更新されている
+- [ ] 他のGit利用者が理解しやすい構成になっている
+- [ ] CI/CDが正常に動作する
+- [ ] 全てのテストが通る
+- [ ] ドキュメントが更新されている
+
+### 🤝 AI-Human協働体制
+
+#### 🤖 AI担当領域
+- ファイル移動・リネーム作業
+- リンク更新・整合性確認
+- コミットメッセージ作成
+- テンプレート作成・自動化
+
+#### 👤 人間担当領域  
+- 全体方針・構成決定
+- Pull Requestレビュー・承認
+- 最終的な品質チェック
+- プロジェクト管理・優先順位決定
+
+### 📋 実行コマンド例
+```bash
+# 1. Feature Branch作成
+git checkout -b feature/project-root-cleanup
+
+# 2. 作業実行
+# (ファイル移動・整理作業)
+
+# 3. コミット
+git add .
+git commit -m "🗂️ プロジェクト構造最適化
+
+✨ Features:
+- README.md以外のMDファイルをdocs/配下に分類配置
+- 標準的なディレクトリ構成に準拠
+
+🎯 Benefits:
+- GitFlow標準準拠・他Git利用者も納得
+- 保守性・スケーラビリティ向上
+
+#GitFlow #ProjectStructure #Documentation"
+
+# 4. プッシュ・PR作成
+git push origin feature/project-root-cleanup
+```
+
+### 🚀 期待される効果
+- **標準準拠**: GitFlow・Git標準プラクティス準拠
+- **保守性向上**: ファイル・ディレクトリ構成の最適化
+- **協働促進**: 他の開発者が参加しやすい環境
+- **品質向上**: レビュープロセスによる品質確保
+
+### 📝 関連資料
+- [GitFlow実践ガイド](../docs/guides/GITFLOW_PRACTICE_GUIDE.md)
+- [プロジェクト構造ベストプラクティス](../docs/technical/PROJECT_STRUCTURE_BEST_PRACTICES.md)
+- [レビューチェックリスト](../.github/pull_request_template.md)
+
+---
+
+### 🎪 面白ポイント
+**「'うるさい人間'も納得する標準的な構成で、AI×人間協働の品質を証明」** 😄
+
+### 🤖 AI-Human Value
+- **AI**: 24時間稼働・高速実行・一貫性
+- **人間**: 判断力・品質管理・最終責任
+- **協働**: 最高品質×最速実行の実現
