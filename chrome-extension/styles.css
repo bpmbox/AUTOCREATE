@@ -1,0 +1,118 @@
+/**
+ * AUTOCREATE AI社長 - Chrome Extension スタイル
+ */
+
+/* AI社長通知スタイル */
+.ai-president-notification {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 500;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* AI社長入力欄ハイライト */
+.ai-president-input-highlight {
+    outline: 2px solid #4CAF50 !important;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* AI社長送信ボタンハイライト */
+.ai-president-submit-highlight {
+    outline: 2px solid #2196F3 !important;
+    box-shadow: 0 0 8px rgba(33, 150, 243, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* AI社長監視インジケーター */
+.ai-president-monitor-indicator {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 12px;
+    height: 12px;
+    background-color: #4CAF50;
+    border-radius: 50%;
+    z-index: 10001;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+}
+
+/* ポップアップスタイル */
+.ai-president-popup {
+    width: 300px;
+    padding: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.ai-president-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.ai-president-status {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.ai-president-controls {
+    padding: 12px;
+}
+
+.ai-president-button {
+    width: 100%;
+    padding: 8px 16px;
+    margin: 4px 0;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.ai-president-button:hover {
+    background-color: #45a049;
+}
+
+.ai-president-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.ai-president-status-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+    font-size: 12px;
+}
+
+.ai-president-status-value {
+    font-weight: bold;
+    color: #4CAF50;
+}
