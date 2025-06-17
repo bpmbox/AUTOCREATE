@@ -1,0 +1,60 @@
+以下の仕様でGradioインターフェースを作成してください：
+
+## システム名：テスト計算機
+## Interface名：calculator_interface
+
+### 機能仕様
+- 2つの数値を入力
+- 演算子を選択（加算、減算、乗算、除算）
+- 計算結果を表示
+
+### 実装要件
+```python
+import gradio as gr
+
+class CalculatorInterface:
+    def __init__(self):
+        self.iface = gr.Interface(
+            fn=self.calculate,
+            inputs=[
+                gr.Number(label="数値1"),
+                gr.Number(label="数値2"),
+                gr.Radio(["加算", "減算", "乗算", "除算"], label="演算子")
+            ],
+            outputs=gr.Text(label="計算結果"),
+            title="テスト計算機",
+            description="簡単な四則演算を行います"
+        )
+
+    def calculate(self, num1, num2, operation):
+        try:
+            if operation == "加算":
+                result = num1 + num2
+            elif operation == "減算":
+                result = num1 - num2
+            elif operation == "乗算":
+                result = num1 * num2
+            elif operation == "除算":
+                if num2 == 0:
+                    return "エラー: ゼロで割ることはできません"
+                result = num1 / num2
+            else:
+                return "エラー: 無効な演算子"
+            
+            return f"結果: {result}"
+        except Exception as e:
+            return f"エラー: {str(e)}"
+
+    def launch(self):
+        self.iface.launch()
+
+# インターフェース変数（自動検出用）
+calculator_interface = CalculatorInterface().iface
+```
+
+### 追加仕様
+- エラーハンドリングを含む
+- ユーザーフレンドリーなメッセージ
+- 日本語対応
+
+このシステムは AUTOCREATE株式会社のAI×人間協働開発システムの一部として使用されます。
