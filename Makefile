@@ -93,6 +93,11 @@ help:
 	@echo "  bpms-monitor    	Monitor human-AI collaboration effectiveness"
 	@echo "  cognitive-check 	Check human cognitive load and suggest breaks"
 	@echo ""
+	@echo "📝 GitHub Issue Management Commands:"
+	@echo "  create-github-issue	Create GitHub Issue for AI-Human BPMS Assistant"
+	@echo "  github-issue-ai-bpms	Create AI-Human BPMS specific GitHub Issue"
+	@echo "  github-issue-status	Check GitHub repository and issue creation status"
+	@echo ""
 
 #Defines a target named install. This target will install the project using Poetry.
 install: poetry-install install-pre-commit farewell
@@ -774,3 +779,27 @@ cognitive-check:
 	@echo -e "$(COLOR_CYAN)🧠 Checking human cognitive load and suggesting breaks...$(COLOR_RESET)"
 	@echo "☕ 人間の認知負荷をチェックし、適切な休憩を提案"
 	@python3 -c "import asyncio; from ai_human_bpms_assistant import AIHumanBPMSAssistant; assistant = AIHumanBPMSAssistant(); asyncio.run(assistant.analyze_human_capacity('demo_user')); print('💡 提案: 10分間の深呼吸またはストレッチ休憩を取りましょう')"
+
+# ==============================================================================
+# 📝 GitHub Issue Creation Commands
+# ==============================================================================
+
+create-github-issue:
+	@echo -e "$(COLOR_CYAN)📝 Creating GitHub Issue for AI-Human BPMS Assistant...$(COLOR_RESET)"
+	@echo "🚀 AI-Human BPMSシステムの実装完了をGitHub Issueとして登録"
+	@python3 create_github_issue.py
+
+github-issue-ai-bpms:
+	@echo -e "$(COLOR_CYAN)🧠 Creating AI-Human BPMS Assistant GitHub Issue...$(COLOR_RESET)"
+	@echo "📝 人間認知限界補完型BPMSシステムの実装報告Issue作成"
+	@python3 -c "from create_github_issue import GitHubIssueCreator; creator = GitHubIssueCreator(); creator.create_ai_human_bpms_issue()"
+
+github-issue-status:
+	@echo -e "$(COLOR_CYAN)📋 Checking GitHub repository and issue status...$(COLOR_RESET)"
+	@echo "🔍 GitHubリポジトリの状態とIssue作成準備確認"
+	@git remote -v
+	@echo ""
+	@echo "📝 作成予定のIssue:"
+	@echo "   🧠 AI-Human BPMS Assistant - 人間認知限界補完型BPMSシステム"
+	@echo "   📊 実装完了報告・パフォーマンス結果・技術仕様"
+	@echo "   🌟 革新的特徴・ビジネスインパクト・未来展望"
