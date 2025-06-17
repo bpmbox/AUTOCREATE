@@ -129,6 +129,16 @@ try:
     except Exception as e:
         print(f"❌ Failed to load System Monitor interface: {e}")
     
+    # 9. Lavelo AI システム (手動追加)
+    try:
+        print("🔄 Loading Lavelo AI interface...")
+        from app.Http.Controllers.Gradio.gra_03_programfromdocs.lavelo import gradio_interface as lavelo_interface
+        gradio_interfaces.append(lavelo_interface)
+        tab_names.append("🤖 Lavelo AI")
+        print("✅ Lavelo AI interface loaded")
+    except Exception as e:
+        print(f"❌ Failed to load Lavelo AI interface: {e}")
+    
     # TabbedInterfaceを手動で作成
     if gradio_interfaces:
         import gradio as gr
