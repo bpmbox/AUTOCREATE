@@ -20,6 +20,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const logContainer = document.getElementById('log-container');
     
+    // チャット要素
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const chatSendBtn = document.getElementById('chat-send');
+    const chatStartTime = document.getElementById('chat-start-time');
+    
     // エラー表示要素
     const errorSection = document.getElementById('error-section');
     const errorMessage = document.getElementById('error-message');
@@ -34,6 +40,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // デバッグ情報初期化
     initDebugInfo();
+    
+    // チャット開始時刻を表示
+    if (chatStartTime) {
+        chatStartTime.textContent = new Date().toLocaleTimeString('ja-JP');
+    }
     
     // エラー表示関数
     function showError(message, detail) {
@@ -298,6 +309,117 @@ document.addEventListener('DOMContentLoaded', async () => {
     // コントロールセクションに追加
     const controls = document.querySelector('.controls');
     controls.appendChild(testConnectionBtn);
+    
+    // チャットメッセージを追加する関数
+    function addChatMessage(sender, message, type = 'user') {
+        if (!chatMessages) return;
+        
+        const messageElement = document.createElement('div');
+        messageElement.className = `chat-message ${type}`;
+        
+        const senderElement = document.createElement('div');
+        senderElement.className = 'chat-sender';
+        senderElement.textContent = sender;
+        
+        const contentElement = document.createElement('div');
+        contentElement.textContent = message;
+        
+        const timeElement = document.createElement('div');
+        timeElement.className = 'chat-time';
+        timeElement.textContent = new Date().toLocaleTimeString('ja-JP');
+        
+        messageElement.appendChild(senderElement);
+        messageElement.appendChild(contentElement);
+        messageElement.appendChild(timeElement);
+        
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // メッセージが多すぎる場合は古いものを削除
+        while (chatMessages.children.length > 20) {
+            chatMessages.removeChild(chatMessages.firstChild);
+        }
+    }
+    
+    // チャットメッセージ送信
+    async function sendChatMessage() {
+        if (!chatInput || !chatSendBtn) return;
+        
+        const message = chatInput.value.trim();
+        if (!message) return;
+        
+        // ユーザーメッセージを表示
+        addChatMessage('あなた', message, 'user');
+        chatInput.value = '';
+        chatSendBtn.disabled = true;
+        
+        try {
+            // Supabaseに送信
+            const response = await chrome.runtime.sendMessage({
+                type: 'SEND_MANUAL_MESSAGE',
+                message: message
+            });
+            
+            if (response && response.success) {
+                addChatMessage('システム', 'メッセージをSupabaseに送信しました', 'system');
+                addLog('✅ チャットメッセージ送信成功');
+                
+                // AI社長の応答を生成
+                setTimeout(() => {
+                    const aiResponse = generateAIResponse(message);
+                    addChatMessage('AI社長', aiResponse, 'ai');
+                }, 1000);
+            } else {
+                addChatMessage('システム', '送信に失敗しました', 'system');
+                if (response && response.error) {
+                    showError('チャット送信失敗', response.error);
+                }
+            }
+        } catch (error) {
+            addChatMessage('システム', 'エラーが発生しました', 'system');
+            showError('チャット通信エラー', error.message);
+        }
+        
+        chatSendBtn.disabled = false;
+    }
+    
+    // AI応答生成
+    function generateAIResponse(userMessage) {
+        const responses = [
+            `「${userMessage}」について承知いたしました。AI社長として対応いたします。`,
+            `ご質問ありがとうございます。AUTOCREATE株式会社AI社長として回答いたします。`,
+            `${userMessage}に関して、AI社長の視点から分析・対応いたします。`,
+            `承知いたしました。AI×人間協働の観点から検討いたします。`,
+            `貴重なご意見ありがとうございます。システム改善に活用いたします。`
+        ];
+        
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        return `🤖 ${randomResponse}\n\n処理時刻: ${new Date().toLocaleString('ja-JP')}`;
+    }
+    
+    // チャット送信ボタンイベント
+    if (chatSendBtn && chatInput) {
+        chatSendBtn.addEventListener('click', sendChatMessage);
+        
+        // Enterキーで送信（Shift+Enterで改行）
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+        
+        // チャット入力欄の自動リサイズ
+        chatInput.addEventListener('input', () => {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = Math.min(chatInput.scrollHeight, 80) + 'px';
+        });
+    }
+    
+    // 初期チャットメッセージを追加
+    setTimeout(() => {
+        addChatMessage('AI社長', 'こんにちは！AUTOCREATE株式会社AI社長です。何かご質問やご要望はありますか？', 'ai');
+    }, 500);
     
     // 初期状態更新
     await updateStatus();
