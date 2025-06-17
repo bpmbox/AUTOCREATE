@@ -406,7 +406,55 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
         return true;
     }
+    
+    if (request.type === 'GET_RECENT_MESSAGES') {
+        console.log('💬 最近のメッセージ取得');
+        getRecentMessages()
+            .then(result => {
+                console.log('✅ 最近のメッセージ取得完了:', result);
+                sendResponse(result);
+            })
+            .catch(error => {
+                console.error('❌ 最近のメッセージ取得失敗:', error);
+                sendResponse({ success: false, error: error.message });
+            });
+        return true;
+    }
 });
+
+// 最近のメッセージを取得
+async function getRecentMessages(limit = 10) {
+    try {
+        const url = `${SUPABASE_CONFIG.url}/rest/v1/chat_history?select=*&order=created.desc&limit=${limit}`;
+        
+        const response = await fetch(url, {
+            headers: {
+                'apikey': SUPABASE_CONFIG.key,
+                'Authorization': `Bearer ${SUPABASE_CONFIG.key}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const messages = await response.json();
+            return {
+                success: true,
+                messages: messages.reverse() // 古い順に並び替え
+            };
+        } else {
+            const errorText = await response.text();
+            return {
+                success: false,
+                error: `HTTP ${response.status}: ${errorText}`
+            };
+        }
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
 
 // 接続テスト関数
 async function testSupabaseConnection() {

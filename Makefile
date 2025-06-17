@@ -20,7 +20,51 @@ name := $(word 2,$(MAKECMDGOALS))
 
 #Defines a target named help.
 help:
-	@echo "Please use 'make <target>' where <target> is one of the following:"
+	@echo "================================================================================"
+	@echo "AUTOCREATE AI CEO & Jobless CTO Command System"
+	@echo "================================================================================"
+	@echo "Usage: make <command>"
+	@echo ""
+	@echo "TOP COMMANDS (Start Here!):"
+	@echo "  chrome-ext             Start AI CEO Chrome extension"
+	@echo "  app                    Start main application (port 7860)"
+	@echo "  wiki-rag               Start WIKI RAG system"
+	@echo "  gui                    Start desktop GUI (port 6080)"
+	@echo "  ai-human-bpms          Start AI-Human BPMS system"
+	@echo ""
+	@echo "Chrome Extension:"
+	@echo "  chrome-ext             Start Chrome with extension"
+	@echo "  chrome-ext-test        Test page + Supabase chat"
+	@echo "  chrome-ext-status      Check extension status"
+	@echo ""
+	@echo "Applications:"
+	@echo "  app                    FastAPI application"
+	@echo "  dev                    Development mode"
+	@echo "  debug                  Debug mode"
+	@echo "  stop-port              Stop port 7860"
+	@echo ""
+	@echo "GUI & Desktop:"
+	@echo "  gui                    AI GUI desktop (port 6080)"
+	@echo "  gui-simple             Simple GUI (port 6081)"
+	@echo ""
+	@echo "OCR & RPA:"
+	@echo "  ocr-gradio             OCR Gradio interface"
+	@echo "  ocr-rpa-demo           RPA automation demo"
+	@echo ""
+	@echo "WIKI RAG:"
+	@echo "  wiki-rag               WIKI RAG system (port 7860)"
+	@echo "  wiki-rag-lite          WIKI RAG Lite"
+	@echo ""
+	@echo "Testing:"
+	@echo "  test                   Run all tests"
+	@echo "  ci-test                CI/CD tests"
+	@echo ""
+	@echo "Setup:"
+	@echo "  install                Install dependencies"
+	@echo "  clean                  Clean temp files"
+	@echo ""
+	@echo "Quick Start: make chrome-ext  or  make app"
+	@echo "================================================================================"
 	@echo "  help           	Return this message with usage instructions."
 	@echo "  install        	Will install the dependencies using Poetry."
 	@echo "  run <folder_name>  Runs GPT Engineer on the folder with the given name."
@@ -662,144 +706,3 @@ miibo-deploy:
 miibo-chat:
 	@echo -e "$(COLOR_CYAN)Starting AUTOCREATE AI chat interface...$(COLOR_RESET)"
 	@python3 -c "from autocreate_miibo_integration import AUTOCREATEChatIntegration; AUTOCREATEChatIntegration().test_integrated_system()"
-
-miibo-webhook-test:
-	@echo -e "$(COLOR_CYAN)Testing miibo webhook integration...$(COLOR_RESET)"
-	@curl -X POST "https://kenken999-nodex-n8n-domain-supabase.hf.space/webhook/autocreate-chat" \
-	  -H "Content-Type: application/json" \
-	  -d '{"message":"Hello from AUTOCREATE AI!", "uid":"test-$(shell date +%s)"}'
-
-miibo-full-integration:
-	@echo -e "$(COLOR_CYAN)Full AUTOCREATE AI + miibo + n8n integration test...$(COLOR_RESET)"
-	@python3 autocreate_miibo_integration.py
-	@echo -e "$(COLOR_GREEN)✅ Integration deployed. Test webhook with:$(COLOR_RESET)"
-	@echo -e "$(COLOR_CYAN)make miibo-webhook-test$(COLOR_RESET)"
-
-# Safe Integration Testing Commands
-safe-test:
-	@echo -e "$(COLOR_CYAN)🛡️  Running safe integration tests (dry-run mode)...$(COLOR_RESET)"
-	@python3 safe_integration_tester.py
-
-config-check:
-	@echo -e "$(COLOR_CYAN)🔍 Checking environment configuration safely...$(COLOR_RESET)"
-	@python3 safe_config_manager.py
-
-integration-status:
-	@echo -e "$(COLOR_CYAN)📊 Checking all integration service status...$(COLOR_RESET)"
-	@python3 -c "from safe_integration_tester import SafeIntegrationTester; SafeIntegrationTester(dry_run=True).run_safe_test_suite()"
-
-dry-run-all:
-	@echo -e "$(COLOR_CYAN)🔒 Testing all integrations in safe mode...$(COLOR_RESET)"
-	@echo "n8n Integration Status:"
-	@python3 -c "print('✅ n8n API endpoint configured')"
-	@echo "miibo Integration Status:"
-	@python3 -c "print('✅ miibo API endpoint configured')"
-	@echo "Notion Integration Status:"  
-	@python3 -c "print('✅ Notion API endpoint configured')"
-	@echo "GAS Integration Status:"
-	@python3 -c "print('✅ GAS OAuth configuration ready')"
-	@echo -e "$(COLOR_GREEN)🎉 All integrations configured safely!$(COLOR_RESET)"
-
-# Production Safety Commands
-production-safety-check:
-	@echo -e "$(COLOR_CYAN)🚨 Production Safety Check...$(COLOR_RESET)"
-	@echo "⚠️  This will perform READ-ONLY checks on production systems"
-	@echo "🔒 No data will be modified or created"
-	@python3 safe_integration_tester.py
-	@echo -e "$(COLOR_GREEN)✅ Production safety check completed$(COLOR_RESET)"
-
-# Google Ecosystem Integration Commands  
-google-ecosystem-demo:
-	@echo -e "$(COLOR_CYAN)🌟 Demonstrating Google Ecosystem Integration...$(COLOR_RESET)"
-	@python3 google_ecosystem_manager.py
-
-google-ecosystem-deploy:
-	@echo -e "$(COLOR_CYAN)🚀 Deploying Google Ecosystem Integration...$(COLOR_RESET)"
-	@echo "⚠️  This will add ultimate Google integration to your GAS project"
-	@python3 -c "from google_ecosystem_manager import GoogleEcosystemManager; manager = GoogleEcosystemManager(); manager.deploy_google_ecosystem_integration()"
-
-google-services-status:
-	@echo -e "$(COLOR_CYAN)📊 Google Services Integration Status...$(COLOR_RESET)"
-	@echo "✅ Available Services:"
-	@echo "   📧 Gmail: Automated notifications & reports"
-	@echo "   📅 Calendar: Smart scheduling & milestones" 
-	@echo "   📁 Drive: File organization & backup"
-	@echo "   📊 Sheets: Metrics & analytics"
-	@echo "   📝 Docs: Auto-documentation"
-	@echo "   📋 Forms: Dynamic data collection"
-	@echo "   💬 Chat: Team collaboration"
-	@echo "   ☁️  Cloud: Serverless functions"
-	@echo "   🎥 Meet: Video conferencing"
-	@echo "   🗺️  Maps: Location services"
-	@echo "   🌐 Translate: Multi-language support"
-	@echo "   👁️  Vision: Image recognition"
-
-google-services-check:
-	@echo -e "$(COLOR_CYAN)🔍 Checking Google services availability (READ-ONLY)...$(COLOR_RESET)"
-	@echo "🛡️  Safe mode: データの変更は一切行いません"
-	@python3 google_ecosystem_safe_reader.py
-
-google-safe-demo:
-	@echo -e "$(COLOR_CYAN)🔒 Google ecosystem safe demo (READ-ONLY)...$(COLOR_RESET)"
-	@echo "⚠️  他社のGASなので読み取り専用で動作確認"
-	@python3 -c "from google_ecosystem_safe_reader import GoogleEcosystemSafeReader; reader = GoogleEcosystemSafeReader(); reader.safe_check_google_services(); reader.safe_demo_google_data_access()"
-
-google-data-permissions:
-	@echo -e "$(COLOR_CYAN)📋 Google data access permissions check...$(COLOR_RESET)"
-	@echo "🔒 READ-ONLY: 許可された読み取り操作のみ"
-	@echo "✅ 許可される操作:"
-	@echo "   • 関数一覧の取得"
-	@echo "   • サービス利用可能性の確認"
-
-# ==============================================================================
-# 🧠 AI-Human BPMS Assistant Commands
-# ==============================================================================
-
-ai-human-bpms:
-	@echo -e "$(COLOR_CYAN)🧠 Starting AI-Human BPMS Assistant demonstration...$(COLOR_RESET)"
-	@echo "🤖 AIが人間の認知限界を補完するシステム"
-	@python3 ai_human_bpms_assistant.py
-
-bpms-analyze:
-	@echo -e "$(COLOR_CYAN)🔍 Analyzing human cognitive capacity and workflow needs...$(COLOR_RESET)"
-	@echo "🧠 人間の認知状態を分析し、最適なワークフローを提案します"
-	@python3 -c "import asyncio; from ai_human_bpms_assistant import AIHumanBPMSAssistant; assistant = AIHumanBPMSAssistant(); asyncio.run(assistant.analyze_human_capacity('demo_user'))"
-
-bpms-optimize:
-	@echo -e "$(COLOR_CYAN)⚡ Generating optimized human-friendly workflows...$(COLOR_RESET)"
-	@echo "🎯 人間の限界を考慮した最適化ワークフローを生成"
-	@python3 -c "import asyncio; from ai_human_bpms_assistant import AIHumanBPMSAssistant; assistant = AIHumanBPMSAssistant(); asyncio.run(assistant.design_human_optimized_workflow('プロジェクト管理を効率化したい', {}))"
-
-bpms-monitor:
-	@echo -e "$(COLOR_CYAN)📊 Monitoring human-AI collaboration effectiveness...$(COLOR_RESET)"
-	@echo "🤝 人間-AI協働の効果を測定・分析"
-	@python3 -c "import asyncio; from ai_human_bpms_assistant import AIHumanBPMSAssistant; assistant = AIHumanBPMSAssistant(); print('🤖 AI-Human協働監視システム起動'); print('📈 生産性向上: 300%'); print('🧠 認知負荷削減: 65%'); print('😊 満足度: 9.2/10')"
-
-cognitive-check:
-	@echo -e "$(COLOR_CYAN)🧠 Checking human cognitive load and suggesting breaks...$(COLOR_RESET)"
-	@echo "☕ 人間の認知負荷をチェックし、適切な休憩を提案"
-	@python3 -c "import asyncio; from ai_human_bpms_assistant import AIHumanBPMSAssistant; assistant = AIHumanBPMSAssistant(); asyncio.run(assistant.analyze_human_capacity('demo_user')); print('💡 提案: 10分間の深呼吸またはストレッチ休憩を取りましょう')"
-
-# ==============================================================================
-# 📝 GitHub Issue Creation Commands
-# ==============================================================================
-
-create-github-issue:
-	@echo -e "$(COLOR_CYAN)📝 Creating GitHub Issue for AI-Human BPMS Assistant...$(COLOR_RESET)"
-	@echo "🚀 AI-Human BPMSシステムの実装完了をGitHub Issueとして登録"
-	@python3 create_github_issue.py
-
-github-issue-ai-bpms:
-	@echo -e "$(COLOR_CYAN)🧠 Creating AI-Human BPMS Assistant GitHub Issue...$(COLOR_RESET)"
-	@echo "📝 人間認知限界補完型BPMSシステムの実装報告Issue作成"
-	@python3 -c "from create_github_issue import GitHubIssueCreator; creator = GitHubIssueCreator(); creator.create_ai_human_bpms_issue()"
-
-github-issue-status:
-	@echo -e "$(COLOR_CYAN)📋 Checking GitHub repository and issue status...$(COLOR_RESET)"
-	@echo "🔍 GitHubリポジトリの状態とIssue作成準備確認"
-	@git remote -v
-	@echo ""
-	@echo "📝 作成予定のIssue:"
-	@echo "   🧠 AI-Human BPMS Assistant - 人間認知限界補完型BPMSシステム"
-	@echo "   📊 実装完了報告・パフォーマンス結果・技術仕様"
-	@echo "   🌟 革新的特徴・ビジネスインパクト・未来展望"
