@@ -24,6 +24,8 @@ help:
 	@echo "  help           	Return this message with usage instructions."
 	@echo "  install        	Will install the dependencies using Poetry."
 	@echo "  run <folder_name>  Runs GPT Engineer on the folder with the given name."
+	@echo "  generated_systems <name>  Generate system using GPT Engineer with prompts"
+	@echo "  runs <name>     	Run GPT Engineer system generation"
 	@echo "  app            	Run the main FastAPI application (app.py) - auto stops port 7860"
 	@echo "  dev            	Run the application in development mode with hot reload - auto stops port 7860"
 	@echo "  debug          	Run the application in debug mode (no reload) - auto stops port 7860"
@@ -65,6 +67,7 @@ help:
 	@echo "  wiki-rag-install	Install WIKI RAG dependencies"
 	@echo "  wiki-rag-lite   	Start WIKI RAG lite system (no auth required)"
 	@echo "  wiki-rag-lite-cli	Use WIKI RAG lite CLI for command line queries"
+	@echo "  wiki-rag-chat   	Start WIKI RAG Chat interface (conversational AI)"
 
 #Defines a target named install. This target will install the project using Poetry.
 install: poetry-install install-pre-commit farewell
@@ -90,20 +93,16 @@ farewell:
 #Defines a target named run. This target will run GPT Engineer on the folder with the given name.
 
 
-runs:
-	@echo -e "$(COLOR_CYAN)Running GPT Engineer on $(COLOR_GREEN)$(name)$(COLOR_CYAN)...$(COLOR_RESET)"
-	@cd ./gpt-engineer && \
-	echo -e "y\ny\ny" | poetry run gpt-engineer "/home/user/app/controllers/$(name)" --model Llama3-70b-8192 --temperature 0.1
 run:
-	@echo -e "$(COLOR_CYAN)Running GPT Engineer on $(COLOR_GREEN)$(name)$(COLOR_CYAN) folder...$(COLOR_RESET)" && \
-	cd ./gpt-engineer && poetry run gpt-engineer /home/user/app/app/Http/controller/$(name) --model Llama3-70b-8192 --temperature 0.1
+	@echo -e "$(COLOR_CYAN)Running Lavelo AI Automation Test...$(COLOR_RESET)" && \
+	python lavelo_automation_test.py --mode=full_test
 
 runbabyagi:
 	cd ./babyagi && python babyagi.py $(name)
 
 install:
-	@echo -e "$(COLOR_CYAN)Running GPT Engineer on $(COLOR_GREEN)$(name)$(COLOR_CYAN) folder...$(COLOR_RESET)" && \
-	cd ./gpt-engineer && pip install poetry && make install
+	@echo -e "$(COLOR_CYAN)Installing dependencies...$(COLOR_RESET)"
+	pip install -r requirements.txt
 
 
 # Counts the lines of code in the project
@@ -303,13 +302,6 @@ generate-issues:
 	@echo "✅ Issues生成完了"
 	@echo "📊 GitHub Issues: https://github.com/$(GITHUB_USER)/AUTOCREATE/issues"
 
-# Issue管理コマンド
-list-issues:
-	@echo "📋 現在のGitHub Issues一覧"
-	@curl -H "Authorization: token $(GITHUB_TOKEN)" \
-		https://api.github.com/repos/$(GITHUB_USER)/AUTOCREATE/issues | \
-		jq -r '.[] | "[\(.number)] \(.title) - \(.state)"'
-
 close-completed-issues:
 	@echo "✅ 完了済みIssueのクローズ処理"
 	@echo "Phase 1完了Issues (#001-#005) をクローズします"
@@ -335,16 +327,6 @@ gas-push:
 	@cd gas-ocr-api && clasp push
 	@echo "✅ GAS API デプロイ完了"
 	@echo "🔗 Web App URLを取得してGradioに設定してください"
-
-ocr-demo:
-	@echo "🎯 OCR分析デモ実行中..."
-	@echo "📸 サンプル画像でテスト実行"
-	@python -c "
-	from gradio_ocr_analyzer import AutocreateOCRAnalyzer
-	analyzer = AutocreateOCRAnalyzer()
-	print('🤖 AI社長: OCR分析システム準備完了')
-	print('💡 使用方法: make ocr-gradio でGradioインターフェース起動')
-	"
 
 screenshot-ocr:
 	@echo "📸 スクリーンショット撮影 → OCR解析"
@@ -563,3 +545,51 @@ wiki-rag-lite-cli: ## Use WIKI RAG Lite CLI for command line queries
 	@echo ""
 	@echo -e "$(COLOR_CYAN)Example usage:$(COLOR_RESET)"
 	@echo -e "  python scripts/wiki_rag_lite_cli.py query 'Gradioの使い方は？'"
+
+wiki-rag-chat: stop-port ## Start WIKI RAG Chat interface (conversational AI)
+	@echo -e "$(COLOR_CYAN)Starting WIKI RAG Chat system...$(COLOR_RESET)"
+	@echo -e "$(COLOR_GREEN)🤖 Chat interface will be available at: http://localhost:7860$(COLOR_RESET)"
+	python scripts/wiki_rag_chat.py
+
+# Lavelo AI 自動化テストコマンド
+test-lavelo:
+	@echo -e "$(COLOR_CYAN)Running Lavelo AI Basic Test...$(COLOR_RESET)"
+	@python lavelo_automation_test.py --mode=basic
+
+test-supabase:
+	@echo -e "$(COLOR_CYAN)Testing Supabase Connection...$(COLOR_RESET)"
+	@python lavelo_automation_test.py --mode=supabase_test
+
+test-memory:
+	@echo -e "$(COLOR_CYAN)Testing Memory System...$(COLOR_RESET)"
+	@python lavelo_automation_test.py --mode=memory_test
+
+test-import:
+	@echo -e "$(COLOR_CYAN)Testing Lavelo Import...$(COLOR_RESET)"
+	@python lavelo_automation_test.py --mode=import_test
+
+test-full:
+	@echo -e "$(COLOR_CYAN)Running Full Lavelo AI Test Suite...$(COLOR_RESET)"
+	@python lavelo_automation_test.py --mode=full_test
+
+# GPT Engineer System Generation
+generated_systems:
+	@echo -e "$(COLOR_CYAN)Running GPT Engineer System Generation for $(COLOR_GREEN)$(name)$(COLOR_CYAN)...$(COLOR_RESET)"
+	@if [ -z "$(name)" ]; then echo "❌ Error: name parameter is required. Usage: make generated_systems name=your_system_name"; exit 1; fi
+	@echo -e "$(COLOR_CYAN)Creating new Gradio controller directory...$(COLOR_RESET)"
+	@mkdir -p "app/Http/Controllers/Gradio/gra_$(shell printf "%02d" $$(ls -1d app/Http/Controllers/Gradio/gra_* 2>/dev/null | wc -l | xargs expr 1 +))_$(name)"
+	@CONTROLLER_DIR="app/Http/Controllers/Gradio/gra_$(shell printf "%02d" $$(ls -1d app/Http/Controllers/Gradio/gra_* 2>/dev/null | wc -l | xargs expr 1 +))_$(name)" && \
+	echo -e "$(COLOR_CYAN)Copying prompts for $(name)...$(COLOR_RESET)" && \
+	if [ -d "generated_projects/$(name)" ]; then \
+		cp -r "generated_projects/$(name)/." "$$CONTROLLER_DIR/"; \
+	fi && \
+	cd ./gpt-engineer && \
+	echo -e "y\ny\ny" | poetry run gpt-engineer "../$$CONTROLLER_DIR" --model gpt-4 --temperature 0.1
+	@echo -e "$(COLOR_GREEN)✅ System generated and added to Gradio Controllers$(COLOR_RESET)"
+	@echo -e "$(COLOR_CYAN)🔗 Auto-registering in Gradio interface...$(COLOR_RESET)"
+	@python -c "import os, glob; dirs = glob.glob('app/Http/Controllers/Gradio/gra_*_$(name)'); print(f'✅ Controller created: {dirs[0]}' if dirs else '❌ Controller directory not found'); print('🔄 Gradio interface will auto-detect this new controller')"
+
+gpt-setup:
+	@echo -e "$(COLOR_CYAN)Setting up GPT Engineer...$(COLOR_RESET)"
+	@cd ./gpt-engineer && pip install poetry && poetry install
+	@echo -e "$(COLOR_GREEN)✅ GPT Engineer setup completed$(COLOR_RESET)"
