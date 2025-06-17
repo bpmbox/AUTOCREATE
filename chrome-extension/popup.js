@@ -165,23 +165,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // 入力テストボタン
     testInputBtn.addEventListener('click', async () => {
-        const testMessage = '🤖 AI社長テストメッセージです！システムが正常に動作しています。';
+        addLog('入力テスト開始中...');
+        testInputBtn.disabled = true;
+        testInputBtn.textContent = 'テスト中...';
         
         try {
             const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
             if (tabs.length > 0) {
-                await chrome.tabs.sendMessage(tabs[0].id, {
-                    type: 'MANUAL_INPUT',
-                    message: testMessage
+                const response = await chrome.tabs.sendMessage(tabs[0].id, {
+                    type: 'TEST_INPUT'
                 });
-                addLog('入力テスト実行');
+                
+                if (response && response.success) {
+                    addLog('✅ 入力テスト成功');
+                    if (response.debug) {
+                        addLog(`サイト: ${response.debug.site}`);
+                        addLog(`入力欄: ${response.debug.inputFound ? '検出' : '未検出'}`);
+                        addLog(`送信ボタン: ${response.debug.submitFound ? '検出' : '未検出'}`);
+                    }
+                } else {
+                    addLog('❌ 入力テスト失敗');
+                    if (response && response.error) {
+                        addLog(`エラー: ${response.error}`);
+                        showError('入力テスト失敗', response.error);
+                    }
+                    if (response && response.debug) {
+                        addLog(`デバッグ: サイト=${response.debug.site}`);
+                    }
+                }
             } else {
-                addLog('アクティブなタブが見つかりません');
+                addLog('❌ アクティブなタブが見つかりません');
+                showError('タブエラー', 'アクティブなタブが見つかりません');
             }
         } catch (error) {
-            addLog('入力テスト失敗');
+            addLog('❌ 入力テスト通信失敗');
+            showError('通信エラー', error.message);
             console.error('入力テストエラー:', error);
         }
+        
+        testInputBtn.disabled = false;
+        testInputBtn.textContent = '入力テスト';
     });
     
     // 手動送信ボタン
@@ -189,34 +212,92 @@ document.addEventListener('DOMContentLoaded', async () => {
         const message = manualMessage.value.trim();
         
         if (!message) {
-            addLog('メッセージが空です');
+            addLog('❌ メッセージが空です');
+            showError('入力エラー', 'メッセージを入力してください');
             return;
         }
         
+        addLog('手動メッセージ送信中...');
+        sendManualBtn.disabled = true;
+        sendManualBtn.textContent = '送信中...';
+        
         try {
-            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tabs.length > 0) {
-                await chrome.tabs.sendMessage(tabs[0].id, {
-                    type: 'MANUAL_INPUT',
-                    message: `🤖 AI社長: ${message}`
-                });
-                addLog(`手動送信: ${message.substring(0, 20)}...`);
-                manualMessage.value = '';
+            // Supabaseに直接送信
+            const response = await chrome.runtime.sendMessage({
+                type: 'SEND_MANUAL_MESSAGE',
+                message: message
+            });
+            
+            if (response && response.success) {
+                addLog('✅ Supabaseに送信完了');
+                manualMessage.value = ''; // 入力欄をクリア
+                
+                // アクティブなタブの入力欄にも入力（オプション）
+                const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+                if (tabs.length > 0) {
+                    try {
+                        await chrome.tabs.sendMessage(tabs[0].id, {
+                            type: 'AUTO_INPUT_MESSAGE',
+                            message: message
+                        });
+                        addLog('✅ ページ入力欄にも送信');
+                    } catch (tabError) {
+                        addLog('⚠️ ページ入力は失敗（Supabaseは成功）');
+                    }
+                }
             } else {
-                addLog('アクティブなタブが見つかりません');
+                addLog('❌ 手動送信失敗');
+                if (response && response.error) {
+                    showError('送信失敗', response.error);
+                }
             }
         } catch (error) {
-            addLog('手動送信失敗');
+            addLog('❌ 手動送信エラー');
+            showError('送信エラー', error.message);
             console.error('手動送信エラー:', error);
         }
+        
+        sendManualBtn.disabled = false;
+        sendManualBtn.textContent = '送信';
     });
     
-    // エラークリアボタン
-    clearErrorBtn.addEventListener('click', () => {
-        clearError();
-        chrome.storage.local.remove(['lastError']);
-        initDebugInfo(); // デバッグ情報再更新
+    // 接続テストボタンを追加
+    const testConnectionBtn = document.createElement('button');
+    testConnectionBtn.textContent = '接続テスト';
+    testConnectionBtn.className = 'btn-primary';
+    testConnectionBtn.style.width = '100%';
+    testConnectionBtn.style.marginTop = '8px';
+    
+    testConnectionBtn.addEventListener('click', async () => {
+        addLog('Supabase接続テスト実行中...');
+        testConnectionBtn.disabled = true;
+        testConnectionBtn.textContent = 'テスト中...';
+        
+        try {
+            const response = await chrome.runtime.sendMessage({ type: 'TEST_CONNECTION' });
+            
+            if (response && response.success) {
+                addLog('✅ 接続テスト成功');
+                addLog(`ステータス: ${response.status}, データ数: ${response.dataCount}`);
+            } else {
+                addLog('❌ 接続テスト失敗');
+                if (response && response.message) {
+                    addLog(`エラー: ${response.message}`);
+                    showError('接続テスト失敗', response.detail || response.message);
+                }
+            }
+        } catch (error) {
+            addLog('❌ 接続テスト通信エラー');
+            showError('通信エラー', error.message);
+        }
+        
+        testConnectionBtn.disabled = false;
+        testConnectionBtn.textContent = '接続テスト';
     });
+    
+    // コントロールセクションに追加
+    const controls = document.querySelector('.controls');
+    controls.appendChild(testConnectionBtn);
     
     // 初期状態更新
     await updateStatus();

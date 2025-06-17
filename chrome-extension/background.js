@@ -26,6 +26,13 @@ chrome.runtime.onInstalled.addListener(() => {
         autoInputEnabled: true
     });
     
+    // インストール完了通知
+    showNotification(
+        `🤖 AI社長監視システム起動`,
+        `AUTOCREATE株式会社のAI社長が監視を開始しました`,
+        'success'
+    );
+    
     // 定期監視開始
     startPeriodicMonitoring();
 });
@@ -85,6 +92,21 @@ async function checkSupabaseForNewMessages() {
         if (newUserMessages.length > 0) {
             console.log(`📬 新着メッセージ ${newUserMessages.length}件処理開始`);
             
+            // 複数メッセージの場合はまとめて通知
+            if (newUserMessages.length === 1) {
+                showNotification(
+                    `📬 新着メッセージ受信`,
+                    `${newUserMessages[0].ownerid}からメッセージが届きました`,
+                    'info'
+                );
+            } else {
+                showNotification(
+                    `📬 複数メッセージ受信`,
+                    `${newUserMessages.length}件の新着メッセージを処理中`,
+                    'info'
+                );
+            }
+            
             for (const message of newUserMessages) {
                 console.log('💬 処理中メッセージ:', message);
                 await processNewMessage(message);
@@ -126,8 +148,22 @@ async function checkSupabaseForNewMessages() {
 async function processNewMessage(message) {
     console.log('💬 メッセージ処理中:', message);
     
+    // デスクトップ通知を表示
+    showNotification(
+        `📬 新着メッセージ受信`,
+        `${message.ownerid}: ${message.messages.substring(0, 100)}...`,
+        'info'
+    );
+    
     // AI社長の応答生成
     const aiResponse = generateAIPresidentResponse(message);
+    
+    // 応答通知も表示
+    showNotification(
+        `🤖 AI社長応答準備完了`,
+        `応答: ${aiResponse.substring(0, 100)}...`,
+        'success'
+    );
     
     // アクティブなタブに応答送信指示
     try {
@@ -142,14 +178,86 @@ async function processNewMessage(message) {
             });
             
             console.log('📤 応答送信指示完了');
+            showNotification(
+                `✅ 応答送信完了`,
+                `AI社長がページに応答を入力しました`,
+                'success'
+            );
         }
         
     } catch (error) {
         console.error('❌ メッセージ送信エラー:', error);
+        showNotification(
+            `❌ 応答送信エラー`,
+            `エラー: ${error.message}`,
+            'error'
+        );
     }
     
     // Supabaseにも応答を記録
     await sendResponseToSupabase(aiResponse, message);
+}
+
+// デスクトップ通知を表示する関数
+function showNotification(title, message, type = 'info') {
+    const iconUrl = getNotificationIcon(type);
+    
+    chrome.notifications.create({
+        type: 'basic',
+        iconUrl: iconUrl,
+        title: title,
+        message: message,
+        priority: type === 'error' ? 2 : 1
+    }, (notificationId) => {
+        console.log(`📢 通知表示: ${notificationId}`);
+        
+        // 5秒後に通知を自動削除
+        setTimeout(() => {
+            chrome.notifications.clear(notificationId);
+        }, 5000);
+    });
+}
+
+// 通知クリック時の処理
+chrome.notifications.onClicked.addListener((notificationId) => {
+    console.log('🔔 通知がクリックされました:', notificationId);
+    
+    // 通知をクリアして、拡張機能のポップアップを開く
+    chrome.notifications.clear(notificationId);
+    
+    // アクティブなタブでSupabaseチャットページを開く（オプション）
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length > 0) {
+            // 現在のタブでSupabaseチャットページを開く
+            chrome.tabs.update(tabs[0].id, {
+                url: 'https://supabase-message-stream.lovable.app/'
+            });
+        }
+    });
+});
+
+// 通知が閉じられた時の処理
+chrome.notifications.onClosed.addListener((notificationId, byUser) => {
+    if (byUser) {
+        console.log('🔕 ユーザーが通知を閉じました:', notificationId);
+    } else {
+        console.log('⏰ 通知が自動的に閉じられました:', notificationId);
+    }
+});
+
+// 通知アイコンを取得
+function getNotificationIcon(type) {
+    // アイコンファイルのパス（拡張機能内）
+    switch (type) {
+        case 'success':
+            return 'icons/icon16.png'; // 成功用アイコン
+        case 'error':
+            return 'icons/icon16.png';  // エラー用アイコン
+        case 'warning':
+            return 'icons/icon16.png'; // 警告用アイコン
+        default:
+            return 'icons/icon16.png';  // デフォルトアイコン
+    }
 }
 
 // AI社長の応答生成
@@ -236,18 +344,176 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 // メッセージリスナー
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log('📨 メッセージ受信:', request.type);
+    
     if (request.type === 'GET_STATUS') {
-        sendResponse({
+        const status = {
             active: true,
             lastCheck: lastCheckTime,
-            processedCount: processedMessages.size
-        });
+            processedCount: processedMessages.size,
+            connectionStatus: 'unknown'
+        };
+        console.log('📊 ステータス応答:', status);
+        sendResponse(status);
+        return true;
     }
     
     if (request.type === 'MANUAL_CHECK') {
-        checkSupabaseForNewMessages();
-        sendResponse({ success: true });
+        console.log('🔄 手動チェック開始');
+        checkSupabaseForNewMessages()
+            .then(() => {
+                console.log('✅ 手動チェック完了');
+                sendResponse({ success: true });
+            })
+            .catch(error => {
+                console.error('❌ 手動チェック失敗:', error);
+                sendResponse({ success: false, error: error.message });
+            });
+        return true; // 非同期応答
+    }
+    
+    if (request.type === 'TOGGLE_MONITOR') {
+        // 監視の開始/停止機能（今後実装）
+        console.log('🔄 監視状態切り替え（実装予定）');
+        sendResponse({ success: true, message: '監視状態切り替え機能は開発中です' });
+        return true;
+    }
+    
+    if (request.type === 'TEST_CONNECTION') {
+        console.log('🧪 接続テスト開始');
+        testSupabaseConnection()
+            .then(result => {
+                console.log('✅ 接続テスト完了:', result);
+                sendResponse(result);
+            })
+            .catch(error => {
+                console.error('❌ 接続テスト失敗:', error);
+                sendResponse({ success: false, error: error.message });
+            });
+        return true;
+    }
+    
+    if (request.type === 'SEND_MANUAL_MESSAGE') {
+        console.log('📤 手動メッセージ送信:', request.message);
+        sendManualMessageToSupabase(request.message)
+            .then(result => {
+                console.log('✅ 手動メッセージ送信完了');
+                sendResponse({ success: true });
+            })
+            .catch(error => {
+                console.error('❌ 手動メッセージ送信失敗:', error);
+                sendResponse({ success: false, error: error.message });
+            });
+        return true;
     }
 });
+
+// 接続テスト関数
+async function testSupabaseConnection() {
+    try {
+        showNotification(
+            `🔍 Supabase接続テスト開始`,
+            `データベース接続を確認中...`,
+            'info'
+        );
+        
+        const url = `${SUPABASE_CONFIG.url}/rest/v1/chat_history?select=id&limit=1`;
+        console.log('🧪 テストURL:', url);
+        
+        const response = await fetch(url, {
+            headers: {
+                'apikey': SUPABASE_CONFIG.key,
+                'Authorization': `Bearer ${SUPABASE_CONFIG.key}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showNotification(
+                `✅ Supabase接続成功`,
+                `正常に接続されました (データ数: ${data.length})`,
+                'success'
+            );
+            return { 
+                success: true, 
+                message: '接続成功', 
+                status: response.status,
+                dataCount: data.length 
+            };
+        } else {
+            const errorText = await response.text();
+            showNotification(
+                `❌ Supabase接続失敗`,
+                `HTTP ${response.status}: ${errorText.substring(0, 100)}`,
+                'error'
+            );
+            return { 
+                success: false, 
+                message: `接続失敗: HTTP ${response.status}`,
+                detail: errorText 
+            };
+        }
+    } catch (error) {
+        showNotification(
+            `❌ Supabase接続エラー`,
+            `${error.message}`,
+            'error'
+        );
+        return { 
+            success: false, 
+            message: '接続エラー',
+            detail: error.message 
+        };
+    }
+}
+
+// 手動メッセージ送信関数
+async function sendManualMessageToSupabase(message) {
+    showNotification(
+        `📤 手動メッセージ送信中`,
+        `Supabaseに送信しています...`,
+        'info'
+    );
+    
+    const messageData = {
+        messages: message,
+        ownerid: 'AI社長(手動)',
+        created: new Date().toISOString(),
+        isread: false,
+        targetid: 'autocreate_manual',
+        status: 'sent',
+        status_created: new Date().toISOString()
+    };
+    
+    const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/chat_history`, {
+        method: 'POST',
+        headers: {
+            'apikey': SUPABASE_CONFIG.key,
+            'Authorization': `Bearer ${SUPABASE_CONFIG.key}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(messageData)
+    });
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        showNotification(
+            `❌ メッセージ送信失敗`,
+            `HTTP ${response.status}: ${errorText.substring(0, 100)}`,
+            'error'
+        );
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    
+    showNotification(
+        `✅ メッセージ送信成功`,
+        `Supabaseにメッセージを送信しました`,
+        'success'
+    );
+    
+    return await response.json();
+}
 
 console.log('🎯 AI社長監視システム準備完了！');

@@ -190,37 +190,95 @@ function showNotification(message, type = 'info') {
 
 // メッセージリスナー
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log('📨 メッセージ受信:', request);
+    console.log('📨 コンテンツスクリプト メッセージ受信:', request);
     
     if (request.type === 'INIT_AI_PRESIDENT_MONITOR') {
         detectPageType();
         aiPresidentMonitor.active = true;
         showNotification('AI社長監視システム起動', 'success');
         sendResponse({ success: true, site: aiPresidentMonitor.currentSite });
+        return true;
     }
     
     if (request.type === 'AUTO_INPUT_MESSAGE') {
-        const success = autoInputMessage(request.message);
-        sendResponse({ success });
-        
-        // 元メッセージの情報も表示
-        if (request.originalMessage) {
-            console.log('📬 元メッセージ:', request.originalMessage);
-        }
-    }
-    
-    if (request.type === 'MANUAL_INPUT') {
-        const success = autoInputMessage(request.message);
-        sendResponse({ success });
+        const result = autoInputMessage(request.message);
+        sendResponse({ success: result });
+        return true;
     }
     
     if (request.type === 'GET_PAGE_INFO') {
-        sendResponse({
+        detectPageType();
+        sendResponse({ 
             site: aiPresidentMonitor.currentSite,
+            url: window.location.href,
             inputFound: !!findInputField(),
             submitFound: !!findSubmitButton(),
-            active: aiPresidentMonitor.active
+            inputSelector: aiPresidentMonitor.inputSelector,
+            submitSelector: aiPresidentMonitor.submitSelector
         });
+        return true;
+    }
+    
+    if (request.type === 'TEST_INPUT') {
+        console.log('🧪 入力テスト開始');
+        const testMessage = '🤖 AI社長からのテストメッセージです！AUTOCREATE株式会社の入力システムが正常に動作しています。';
+        
+        const inputField = findInputField();
+        const submitButton = findSubmitButton();
+        
+        if (!inputField) {
+            console.error('❌ 入力欄が見つかりません');
+            showNotification('入力欄が見つかりません', 'error');
+            sendResponse({ 
+                success: false, 
+                error: '入力欄が見つかりません',
+                debug: {
+                    currentSite: aiPresidentMonitor.currentSite,
+                    inputSelector: aiPresidentMonitor.inputSelector,
+                    url: window.location.href
+                }
+            });
+            return true;
+        }
+        
+        if (!submitButton) {
+            console.warn('⚠️ 送信ボタンが見つかりません（入力のみテスト）');
+        }
+        
+        try {
+            // テストメッセージを入力
+            const result = autoInputMessage(testMessage);
+            
+            if (result) {
+                console.log('✅ 入力テスト成功');
+                showNotification('入力テスト成功！', 'success');
+                sendResponse({ 
+                    success: true, 
+                    message: 'テストメッセージ入力完了',
+                    debug: {
+                        inputFound: true,
+                        submitFound: !!submitButton,
+                        site: aiPresidentMonitor.currentSite
+                    }
+                });
+            } else {
+                throw new Error('入力処理が失敗しました');
+            }
+        } catch (error) {
+            console.error('❌ 入力テスト失敗:', error);
+            showNotification('入力テスト失敗', 'error');
+            sendResponse({ 
+                success: false, 
+                error: error.message,
+                debug: {
+                    inputFound: !!inputField,
+                    submitFound: !!submitButton,
+                    site: aiPresidentMonitor.currentSite,
+                    error: error.message
+                }
+            });
+        }
+        return true;
     }
 });
 
