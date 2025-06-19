@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI大統領応答機能テスト / AI President Response Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            background: #fdf2f2;
+        }
+        
+        .test-button {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto;
+            width: 300px;
+        }
+        
+        .test-button:hover {
+            background: linear-gradient(45deg, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            color: #27ae60;
+        }
+        
+        .error {
+            color: #e74c3c;
+        }
+        
+        .info {
+            color: #3498db;
+        }
+        
+        .warning {
+            color: #f39c12;
+        }
+        
+        .status {
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .description {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI大統領応答機能テスト<br>AI President Response Test</h1>
+        
+        <div class="description">
+            <h3>🎯 テスト概要 / Test Overview</h3>
+            <p><strong>日本語:</strong> このテストは、Chrome拡張機能のAI大統領応答機能が様々なエッジケース（undefined、null、空文字列など）に対して正しく動作するかを確認します。</p>
+            <p><strong>English:</strong> This test verifies that the Chrome extension's AI President response function works correctly with various edge cases (undefined, null, empty strings, etc.).</p>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧪 AI応答機能テスト / AI Response Function Test</h3>
+            <p><strong>テスト内容 / Test Content:</strong></p>
+            <ul>
+                <li>正常なメッセージ / Normal messages</li>
+                <li>undefined/null値 / undefined/null values</li>
+                <li>空文字列 / Empty strings</li>
+                <li>特殊文字 / Special characters</li>
+                <li>非文字列型データ / Non-string data types</li>
+            </ul>
+            
+            <button class="test-button" onclick="runAIResponseTest()">
+                🚀 AI応答テスト開始 / Start AI Response Test
+            </button>
+            
+            <div class="status" id="test-status">
+                テスト待機中... / Waiting for test...
+            </div>
+            
+            <div class="results" id="test-results"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = document.getElementById('test-results');
+        let testStatus = document.getElementById('test-status');
+        
+        function log(message, className = '') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            testResults.innerHTML += `<span class="${className}">${logEntry}</span>`;
+            testResults.scrollTop = testResults.scrollHeight;
+        }
+        
+        function updateStatus(message, className = '') {
+            testStatus.innerHTML = message;
+            testStatus.className = `status ${className}`;
+        }
+        
+        async function runAIResponseTest() {
+            testResults.innerHTML = '';
+            updateStatus('🧪 テスト実行中... / Running tests...', 'info');
+            
+            log('🧪 AI大統領応答機能テストを開始します...', 'info');
+            log('🧪 Starting AI President Response Function Test...', 'info');
+            
+            // テストデータセット
+            const testCases = [
+                // 正常なケース
+                { description: '正常なメッセージ', data: { message: 'こんにちは', username: 'テストユーザー' } },
+                { description: 'Normal message', data: { message: 'Hello', username: 'TestUser' } },
+                
+                // undefinedケース
+                { description: 'undefined メッセージ', data: { message: undefined, username: 'テストユーザー' } },
+                { description: 'undefined message', data: { message: undefined, username: 'TestUser' } },
+                
+                // nullケース
+                { description: 'null メッセージ', data: { message: null, username: 'テストユーザー' } },
+                { description: 'null message', data: { message: null, username: 'TestUser' } },
+                
+                // 空文字列ケース
+                { description: '空文字列メッセージ', data: { message: '', username: 'テストユーザー' } },
+                { description: 'empty string message', data: { message: '', username: 'TestUser' } },
+                
+                // オブジェクト全体がundefined
+                { description: 'メッセージオブジェクト全体がundefined', data: undefined },
+                { description: 'entire message object undefined', data: undefined },
+                
+                // 空オブジェクト
+                { description: '空オブジェクト', data: {} },
+                { description: 'empty object', data: {} },
+                
+                // 特殊な文字
+                { description: '特殊文字を含むメッセージ', data: { message: '質問？ありがとう！', username: '特殊ユーザー' } },
+                { description: 'special characters message', data: { message: 'Question? Thank you!', username: 'SpecialUser' } },
+                
+                // 非文字列型
+                { description: '数値メッセージ', data: { message: 12345, username: 'NumberUser' } },
+                { description: 'number message', data: { message: 12345, username: 'NumberUser' } },
+                
+                // 配列メッセージ
+                { description: '配列メッセージ', data: { message: ['配列', 'メッセージ'], username: 'ArrayUser' } },
+                { description: 'array message', data: { message: ['array', 'message'], username: 'ArrayUser' } }
+            ];
+            
+            let successCount = 0;
+            let failCount = 0;
+            
+            for (let i = 0; i < testCases.length; i++) {
+                const testCase = testCases[i];
+                log(`\n🧪 テスト ${i + 1}/${testCases.length}: ${testCase.description}`, 'info');
+                
+                try {
+                    // バックグラウンドスクリプトにテストメッセージを送信
+                    const response = await new Promise((resolve, reject) => {
+                        chrome.runtime.sendMessage({
+                            type: 'test_ai_response',
+                            data: testCase.data
+                        }, (response) => {
+                            if (chrome.runtime.lastError) {
+                                reject(chrome.runtime.lastError);
+                            } else {
+                                resolve(response);
+                            }
+                        });
+                    });
+                    
+                    if (response.success) {
+                        log(`✅ テスト成功: ${response.response.substring(0, 100)}...`, 'success');
+                        successCount++;
+                    } else {
+                        log(`❌ テスト失敗: ${response.error}`, 'error');
+                        failCount++;
+                    }
+                    
+                } catch (error) {
+                    log(`❌ テスト例外: ${error.message}`, 'error');
+                    failCount++;
+                }
+                
+                // 次のテストまで少し待機
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // ステータス更新
+                updateStatus(`🧪 進行中: ${i + 1}/${testCases.length} (成功: ${successCount}, 失敗: ${failCount})`, 'info');
+            }
+            
+            // 最終結果
+            const totalTests = testCases.length;
+            const successRate = (successCount / totalTests * 100).toFixed(1);
+            
+            log(`\n🎉 すべてのテストが完了しました！`, 'info');
+            log(`📊 テスト結果: ${successCount}/${totalTests} 成功 (成功率: ${successRate}%)`, 'info');
+            
+            if (failCount === 0) {
+                log(`✅ すべてのテストケースが正常に動作しています！`, 'success');
+                updateStatus(`🎉 テスト完了: 全て成功! (${successCount}/${totalTests})`, 'success');
+            } else {
+                log(`⚠️ ${failCount}個のテストケースで問題が発生しました`, 'warning');
+                updateStatus(`⚠️ テスト完了: ${failCount}個の問題 (成功: ${successCount}/${totalTests})`, 'warning');
+            }
+        }
+        
+        // 拡張機能が読み込まれているかチェック
+        if (!chrome.runtime) {
+            log('❌ Chrome拡張機能が読み込まれていません', 'error');
+            updateStatus('❌ 拡張機能未読み込み / Extension not loaded', 'error');
+        } else {
+            log('✅ Chrome拡張機能が読み込まれています', 'success');
+            updateStatus('✅ 拡張機能準備完了 / Extension ready', 'success');
+        }
+    </script>
+</body>
+</html>

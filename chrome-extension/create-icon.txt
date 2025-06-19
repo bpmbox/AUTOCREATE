@@ -1,0 +1,2 @@
+// アイコンファイルを作成（16x16 PNG）
+// この内容を chrome-extension/icon16.png として保存する必要があります

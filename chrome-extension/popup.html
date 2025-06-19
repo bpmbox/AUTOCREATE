@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI社長監視システム</title>
+    <style>
+        body {
+            width: 450px;
+            height: 600px;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            overflow-y: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .header p {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .status {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .status-value {
+            font-weight: bold;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+        
+        .manual-input {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+        
+        .error-section {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 16px;
+            display: none;
+        }
+        
+        .error-section.show {
+            display: block;
+        }
+        
+        .error-title {
+            font-weight: bold;
+            color: #721c24;
+            margin-bottom: 8px;
+        }
+        
+        .error-detail {
+            font-size: 12px;
+            color: #721c24;
+            font-family: monospace;
+            background: rgba(255,255,255,0.5);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        
+        .debug-section {
+            background-color: #e2e3e5;
+            border: 1px solid #d6d8db;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 16px;
+        }
+        
+        .debug-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .debug-info {
+            font-size: 12px;
+            font-family: monospace;
+            background: rgba(255,255,255,0.7);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+        
+        .chat-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .chat-title {
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chat-messages {
+            height: 200px;
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            padding: 8px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        
+        .chat-message {
+            margin-bottom: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            max-width: 90%;
+        }
+        
+        .chat-message.user {
+            background-color: #007bff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .chat-message.ai {
+            background-color: #e9ecef;
+            color: #495057;
+            margin-right: auto;
+        }
+        
+        .chat-message.system {
+            background-color: #fff3cd;
+            color: #856404;
+            margin: 0 auto;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .chat-sender {
+            font-weight: bold;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        
+        .chat-time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            resize: none;
+            font-size: 13px;
+            min-height: 36px;
+            max-height: 80px;
+        }
+        
+        .chat-input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        
+        .chat-send-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            height: 36px;
+        }
+        
+        .chat-send-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .chat-send-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .online-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #28a745;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .manual-input textarea {
+            width: 100%;
+            height: 60px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .logs {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+        
+        .log-item {
+            font-size: 12px;
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+        
+        .indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .indicator.active {
+            background-color: #28a745;
+        }
+        
+        .indicator.inactive {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 AI社長監視システム</h1>
+        <p>AUTOCREATE株式会社</p>
+    </div>
+    
+    <div class="status">
+        <div class="status-item">
+            <span>状態:</span>
+            <span class="status-value" id="status">
+                <span class="indicator" id="status-indicator"></span>
+                <span id="status-text">確認中...</span>
+            </span>
+        </div>
+        <div class="status-item">
+            <span>最終チェック:</span>
+            <span class="status-value" id="last-check">--:--</span>
+        </div>
+        <div class="status-item">
+            <span>処理済み:</span>
+            <span class="status-value" id="processed-count">0件</span>
+        </div>
+        <div class="status-item">
+            <span>現在のサイト:</span>
+            <span class="status-value" id="current-site">未検出</span>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button class="btn-primary" id="manual-check">手動チェック</button>
+        <button class="btn-secondary" id="toggle-monitor">監視停止</button>
+        <button class="btn-success" id="test-input">入力テスト</button>
+    </div>
+    
+    <div class="manual-input">
+        <h3>手動メッセージ送信</h3>
+        <textarea id="manual-message" placeholder="AI社長からのメッセージを入力..."></textarea>
+        <button class="btn-primary" id="send-manual" style="margin-top: 8px; width: 100%;">送信</button>
+    </div>
+    
+    <div class="chat-section">
+        <div class="chat-title">
+            💬 リアルタイムチャット
+            <span class="online-indicator"></span>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="chat-message system">
+                <div class="chat-sender">システム</div>
+                <div>AI社長監視チャット開始</div>
+                <div class="chat-time" id="chat-start-time"></div>
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <textarea class="chat-input" id="chat-input" placeholder="メッセージを入力..." rows="1"></textarea>
+            <button class="chat-send-btn" id="chat-send">送信</button>
+        </div>
+    </div>
+    
+    <div class="error-section" id="error-section">
+        <div class="error-title">🚨 通信エラー</div>
+        <div id="error-message">エラーなし</div>
+        <div class="error-detail" id="error-detail"></div>
+        <button class="btn-secondary" id="clear-error" style="margin-top: 8px; width: 100%;">エラークリア</button>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-title">🔍 デバッグ情報</div>
+        <div class="debug-info" id="supabase-url"></div>
+        <div class="debug-info" id="api-key-status"></div>
+        <div class="debug-info" id="permissions-status"></div>
+        <div class="debug-info" id="last-request-info"></div>
+    </div>
+    
+    <div class="logs">
+        <h3>ログ</h3>
+        <div id="log-container">
+            <div class="log-item">システム起動完了</div>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

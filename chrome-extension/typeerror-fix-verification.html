@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeError修正確認テスト / TypeError Fix Verification Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .error-info {
+            background: #ffe6e6;
+            border: 2px solid #ff4444;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .fix-info {
+            background: #e6ffe6;
+            border: 2px solid #44ff44;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            background: #f0f8ff;
+        }
+        
+        .test-button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto;
+            width: 300px;
+        }
+        
+        .test-button:hover {
+            background: linear-gradient(45deg, #2980b9, #1f618d);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            color: #27ae60;
+        }
+        
+        .error {
+            color: #e74c3c;
+        }
+        
+        .info {
+            color: #3498db;
+        }
+        
+        .warning {
+            color: #f39c12;
+        }
+        
+        .status {
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 TypeError修正確認テスト<br>TypeError Fix Verification Test</h1>
+        
+        <div class="error-info">
+            <h3>🐛 修正されたエラー / Fixed Error</h3>
+            <p><code>TypeError: Cannot read properties of undefined (reading 'includes')</code></p>
+            <p><strong>発生場所 / Location:</strong> generateAIPresidentResponse function, line 333</p>
+            <p><strong>原因 / Cause:</strong> undefined/null メッセージデータの不適切な処理</p>
+        </div>
+        
+        <div class="fix-info">
+            <h3>✅ 実施した修正 / Implemented Fixes</h3>
+            <ul>
+                <li>✅ <strong>メッセージフィルタリング強化</strong>: owneridの安全なチェック</li>
+                <li>✅ <strong>processNewMessage関数修正</strong>: undefined/null プロパティの安全な処理</li>
+                <li>✅ <strong>generateAIPresidentResponse強化</strong>: 文字列変換とincludesチェックの安全化</li>
+                <li>✅ <strong>包括的エラーハンドリング</strong>: try-catch文と詳細ログ</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧪 包括的修正確認テスト / Comprehensive Fix Verification Test</h3>
+            <p><strong>テスト内容 / Test Content:</strong></p>
+            <ul>
+                <li>📋 <strong>メッセージフィルタリング</strong>: undefined owneridの処理</li>
+                <li>💬 <strong>メッセージ処理</strong>: undefined messagesの処理</li>
+                <li>🤖 <strong>AI応答生成</strong>: 様々なエッジケースでのTypeError防止</li>
+                <li>🔍 <strong>Supabaseデータ模擬</strong>: 実際のAPIレスポンスパターン再現</li>
+            </ul>
+            
+            <button class="test-button" onclick="runComprehensiveFixTest()">
+                🚀 修正確認テスト実行 / Run Fix Verification Test
+            </button>
+            
+            <div class="status" id="test-status">
+                テスト待機中... / Waiting for test...
+            </div>
+            
+            <div class="results" id="test-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎯 個別修正テスト / Individual Fix Tests</h3>
+            
+            <button class="test-button" onclick="testUndefinedOwnerId()">
+                🔍 undefinedOwnerId処理テスト
+            </button>
+            
+            <button class="test-button" onclick="testUndefinedMessage()">
+                💬 undefinedMessage処理テスト
+            </button>
+            
+            <button class="test-button" onclick="testCompletelyUndefined()">
+                ❌ 完全undefinedデータテスト
+            </button>
+            
+            <div class="results" id="individual-results"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = document.getElementById('test-results');
+        let individualResults = document.getElementById('individual-results');
+        let testStatus = document.getElementById('test-status');
+        
+        function log(message, className = '', target = testResults) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            target.innerHTML += `<span class="${className}">${logEntry}</span>`;
+            target.scrollTop = target.scrollHeight;
+        }
+        
+        function updateStatus(message, className = '') {
+            testStatus.innerHTML = message;
+            testStatus.className = `status ${className}`;
+        }
+        
+        // 包括的修正確認テスト
+        async function runComprehensiveFixTest() {
+            testResults.innerHTML = '';
+            updateStatus('🧪 包括的修正確認テスト実行中...', 'info');
+            
+            log('🧪 包括的TypeError修正テストを開始します...', 'info');
+            
+            // テストメッセージ - 実際のSupabaseからの様々な応答パターン
+            const testMessages = [
+                {
+                    id: 1, ownerid: 'testuser', messages: 'こんにちは、AI社長！',
+                    description: '正常なメッセージ'
+                },
+                {
+                    id: 2, ownerid: undefined, messages: 'owneridがundefinedです',
+                    description: 'owneridがundefined'
+                },
+                {
+                    id: 3, ownerid: 'testuser2', messages: undefined,
+                    description: 'messagesがundefined'
+                },
+                {
+                    id: 4, ownerid: undefined, messages: undefined,
+                    description: '両方ともundefined'
+                },
+                {
+                    id: 5,
+                    description: '完全に空のオブジェクト'
+                },
+                {
+                    id: 6, ownerid: null, messages: null,
+                    description: 'null値'
+                }
+            ];
+            
+            let passCount = 0;
+            let failCount = 0;
+            
+            for (let i = 0; i < testMessages.length; i++) {
+                const testMessage = testMessages[i];
+                log(`\n🧪 テスト ${i + 1}/${testMessages.length}: ${testMessage.description}`, 'info');
+                
+                try {
+                    // AI応答生成テスト
+                    const response = await new Promise((resolve, reject) => {
+                        chrome.runtime.sendMessage({
+                            type: 'test_ai_response',
+                            data: testMessage
+                        }, (response) => {
+                            if (chrome.runtime.lastError) {
+                                reject(chrome.runtime.lastError);
+                            } else {
+                                resolve(response);
+                            }
+                        });
+                    });
+                    
+                    if (response.success) {
+                        log(`✅ テスト成功: ${response.response.substring(0, 80)}...`, 'success');
+                        passCount++;
+                    } else {
+                        log(`❌ テスト失敗: ${response.error}`, 'error');
+                        failCount++;
+                    }
+                    
+                } catch (error) {
+                    log(`❌ テスト例外: ${error.message}`, 'error');
+                    failCount++;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // 結果サマリー
+            const totalTests = testMessages.length;
+            const successRate = (passCount / totalTests * 100).toFixed(1);
+            
+            log(`\n🎉 テスト完了!`, 'info');
+            log(`📊 結果: ${passCount}/${totalTests} 成功 (成功率: ${successRate}%)`, 'info');
+            
+            if (failCount === 0) {
+                log(`✅ すべてのTypeErrorが修正されています！`, 'success');
+                updateStatus(`🎉 修正確認完了: 全て成功! (${passCount}/${totalTests})`, 'success');
+            } else {
+                log(`⚠️ ${failCount}個のテストで問題が検出されました`, 'warning');
+                updateStatus(`⚠️ 修正確認: ${failCount}個の問題 (成功: ${passCount}/${totalTests})`, 'warning');
+            }
+        }
+        
+        // 個別テスト関数
+        async function testUndefinedOwnerId() {
+            individualResults.innerHTML = '';
+            log('🔍 undefinedOwnerIdテスト開始', 'info', individualResults);
+            
+            const testData = {
+                id: 999,
+                ownerid: undefined,
+                messages: 'owneridがundefinedのテストです'
+            };
+            
+            await runIndividualTest(testData, 'undefinedOwnerId');
+        }
+        
+        async function testUndefinedMessage() {
+            individualResults.innerHTML = '';
+            log('💬 undefinedMessageテスト開始', 'info', individualResults);
+            
+            const testData = {
+                id: 998,
+                ownerid: 'testuser',
+                messages: undefined
+            };
+            
+            await runIndividualTest(testData, 'undefinedMessage');
+        }
+        
+        async function testCompletelyUndefined() {
+            individualResults.innerHTML = '';
+            log('❌ 完全undefinedデータテスト開始', 'info', individualResults);
+            
+            await runIndividualTest(undefined, 'completelyUndefined');
+        }
+        
+        async function runIndividualTest(testData, testName) {
+            try {
+                log(`📋 テストデータ: ${JSON.stringify(testData)}`, 'info', individualResults);
+                
+                const response = await new Promise((resolve, reject) => {
+                    chrome.runtime.sendMessage({
+                        type: 'test_ai_response',
+                        data: testData
+                    }, (response) => {
+                        if (chrome.runtime.lastError) {
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            resolve(response);
+                        }
+                    });
+                });
+                
+                if (response.success) {
+                    log(`✅ ${testName}テスト成功!`, 'success', individualResults);
+                    log(`📝 AI応答: ${response.response}`, 'info', individualResults);
+                } else {
+                    log(`❌ ${testName}テスト失敗: ${response.error}`, 'error', individualResults);
+                }
+                
+            } catch (error) {
+                log(`❌ ${testName}テスト例外: ${error.message}`, 'error', individualResults);
+            }
+        }
+        
+        // 拡張機能確認
+        if (!chrome.runtime) {
+            log('❌ Chrome拡張機能が読み込まれていません', 'error');
+            updateStatus('❌ 拡張機能未読み込み / Extension not loaded', 'error');
+        } else {
+            log('✅ Chrome拡張機能が読み込まれています', 'success');
+            updateStatus('✅ 拡張機能準備完了 / Extension ready', 'success');
+        }
+    </script>
+</body>
+</html>

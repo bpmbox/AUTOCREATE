@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XPath設定管理 / XPath Configuration Manager</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .xpath-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            background: #f0f8ff;
+        }
+        
+        .xpath-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .xpath-label {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .xpath-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            background: #f9f9f9;
+        }
+        
+        .xpath-description {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(45deg, #27ae60, #229954);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            color: #27ae60;
+        }
+        
+        .error {
+            color: #e74c3c;
+        }
+        
+        .info {
+            color: #3498db;
+        }
+        
+        .warning {
+            color: #f39c12;
+        }
+        
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        
+        .preset-btn {
+            padding: 8px 15px;
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .preset-btn:hover {
+            background: #d5dbdb;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ XPath設定管理<br>XPath Configuration Manager</h1>
+        
+        <div class="xpath-section">
+            <h3>📝 基本XPath設定 / Basic XPath Settings</h3>
+            
+            <div class="xpath-item">
+                <div class="xpath-label">💬 メッセージ入力欄 / Message Input Field</div>
+                <input type="text" class="xpath-input" id="message-input-xpath" 
+                       placeholder="例: //textarea[@id='message-input'] または //input[@name='message']">
+                <div class="xpath-description">メッセージを入力するテキストエリアやinput要素のXPath</div>
+                <div class="preset-buttons">
+                    <button class="preset-btn" onclick="setPreset('message-input-xpath', '//textarea[contains(@class, &quot;message&quot;)]')">汎用textarea</button>
+                    <button class="preset-btn" onclick="setPreset('message-input-xpath', '//input[@type=&quot;text&quot;]')">汎用input</button>
+                    <button class="preset-btn" onclick="setPreset('message-input-xpath', '//div[@contenteditable=&quot;true&quot;]')">編集可能div</button>
+                </div>
+            </div>
+            
+            <div class="xpath-item">
+                <div class="xpath-label">📤 送信ボタン / Send Button</div>
+                <input type="text" class="xpath-input" id="send-button-xpath" 
+                       placeholder="例: //button[@type='submit'] または //button[contains(text(), '送信')]">
+                <div class="xpath-description">メッセージ送信ボタンのXPath</div>
+                <div class="preset-buttons">
+                    <button class="preset-btn" onclick="setPreset('send-button-xpath', '//button[@type=&quot;submit&quot;]')">送信ボタン</button>
+                    <button class="preset-btn" onclick="setPreset('send-button-xpath', '//button[contains(text(), &quot;送信&quot;)]')">送信テキスト</button>
+                    <button class="preset-btn" onclick="setPreset('send-button-xpath', '//button[contains(text(), &quot;Send&quot;)]')">Send</button>
+                </div>
+            </div>
+            
+            <div class="xpath-item">
+                <div class="xpath-label">💬 メッセージ表示エリア / Message Display Area</div>
+                <input type="text" class="xpath-input" id="message-display-xpath" 
+                       placeholder="例: //div[@class='chat-messages'] または //ul[@id='message-list']">
+                <div class="xpath-description">新しいメッセージが表示されるエリアのXPath</div>
+                <div class="preset-buttons">
+                    <button class="preset-btn" onclick="setPreset('message-display-xpath', '//div[contains(@class, &quot;chat&quot;)]')">チャットエリア</button>
+                    <button class="preset-btn" onclick="setPreset('message-display-xpath', '//div[contains(@class, &quot;message&quot;)]')">メッセージエリア</button>
+                    <button class="preset-btn" onclick="setPreset('message-display-xpath', '//ul[contains(@class, &quot;list&quot;)]')">リスト形式</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="xpath-section">
+            <h3>🌐 サイト別設定 / Site-specific Settings</h3>
+            
+            <div class="xpath-item">
+                <div class="xpath-label">🎯 対象サイトURL / Target Site URL</div>
+                <input type="text" class="xpath-input" id="target-site-url" 
+                       placeholder="例: https://supabase-message-stream.lovable.app/">
+                <div class="xpath-description">XPathを適用するサイトのURL（部分一致）</div>
+            </div>
+            
+            <div class="xpath-item">
+                <div class="xpath-label">📋 設定名 / Configuration Name</div>
+                <input type="text" class="xpath-input" id="config-name" 
+                       placeholder="例: Supabase Chat、ProcessMaker、カスタムサイト">
+                <div class="xpath-description">この設定の識別名</div>
+            </div>
+        </div>
+        
+        <div class="xpath-section">
+            <h3>🧪 XPathテスト / XPath Testing</h3>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="testXPath()">
+                    🔍 XPathテスト / Test XPath
+                </button>
+                <button class="btn btn-warning" onclick="validateXPath()">
+                    ✅ XPath検証 / Validate XPath
+                </button>
+                <button class="btn btn-success" onclick="saveXPathConfig()">
+                    💾 設定保存 / Save Configuration
+                </button>
+                <button class="btn btn-danger" onclick="resetXPathConfig()">
+                    🔄 設定リセット / Reset Configuration
+                </button>
+            </div>
+            
+            <div class="results" id="test-results"></div>
+        </div>
+        
+        <div class="xpath-section">
+            <h3>📚 保存済み設定 / Saved Configurations</h3>
+            
+            <div id="saved-configs">
+                <p>保存済み設定を読み込み中...</p>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="loadSavedConfigs()">
+                    🔄 設定再読み込み / Reload Configurations
+                </button>
+                <button class="btn btn-warning" onclick="exportConfigs()">
+                    📤 設定エクスポート / Export Configurations
+                </button>
+                <button class="btn btn-success" onclick="importConfigs()">
+                    📥 設定インポート / Import Configurations
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = document.getElementById('test-results');
+        
+        function log(message, className = '') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            testResults.innerHTML += `<span class="${className}">${logEntry}</span>`;
+            testResults.scrollTop = testResults.scrollHeight;
+        }
+        
+        // プリセット設定
+        function setPreset(inputId, xpathValue) {
+            document.getElementById(inputId).value = xpathValue;
+            log(`📋 プリセット設定適用: ${inputId} = ${xpathValue}`, 'info');
+        }
+        
+        // XPathテスト
+        async function testXPath() {
+            testResults.innerHTML = '';
+            log('🧪 XPathテストを開始します...', 'info');
+            
+            const messageInputXPath = document.getElementById('message-input-xpath').value;
+            const sendButtonXPath = document.getElementById('send-button-xpath').value;
+            const messageDisplayXPath = document.getElementById('message-display-xpath').value;
+            
+            if (!messageInputXPath && !sendButtonXPath && !messageDisplayXPath) {
+                log('❌ テストするXPathが入力されていません', 'error');
+                return;
+            }
+            
+            try {
+                // 現在のタブでXPathテストを実行
+                const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+                if (tabs.length === 0) {
+                    log('❌ アクティブなタブが見つかりません', 'error');
+                    return;
+                }
+                
+                const tabId = tabs[0].id;
+                log(`🌐 テスト対象タブ: ${tabs[0].url}`, 'info');
+                
+                // コンテンツスクリプトにXPathテストを依頼
+                const response = await chrome.tabs.sendMessage(tabId, {
+                    type: 'TEST_XPATH',
+                    xpaths: {
+                        messageInput: messageInputXPath,
+                        sendButton: sendButtonXPath,
+                        messageDisplay: messageDisplayXPath
+                    }
+                });
+                
+                if (response && response.success) {
+                    log('✅ XPathテスト完了', 'success');
+                    Object.entries(response.results).forEach(([key, result]) => {
+                        if (result.found) {
+                            log(`✅ ${key}: 要素が見つかりました (${result.count}個)`, 'success');
+                        } else {
+                            log(`❌ ${key}: 要素が見つかりませんでした`, 'error');
+                        }
+                    });
+                } else {
+                    log('❌ XPathテスト失敗', 'error');
+                    log(`エラー: ${response?.error || '不明なエラー'}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ XPathテスト例外: ${error.message}`, 'error');
+            }
+        }
+        
+        // XPath検証
+        function validateXPath() {
+            log('\n🔍 XPath構文検証を開始します...', 'info');
+            
+            const xpaths = {
+                'メッセージ入力': document.getElementById('message-input-xpath').value,
+                '送信ボタン': document.getElementById('send-button-xpath').value,
+                'メッセージ表示': document.getElementById('message-display-xpath').value
+            };
+            
+            let allValid = true;
+            
+            Object.entries(xpaths).forEach(([name, xpath]) => {
+                if (!xpath.trim()) {
+                    log(`⚠️ ${name}: XPathが入力されていません`, 'warning');
+                    return;
+                }
+                
+                try {
+                    // XPath構文の基本チェック
+                    if (xpath.startsWith('//') || xpath.startsWith('/')) {
+                        log(`✅ ${name}: XPath構文は正常です`, 'success');
+                    } else {
+                        log(`⚠️ ${name}: XPathは / または // で始まることが推奨されます`, 'warning');
+                    }
+                    
+                    // 基本的な構文チェック
+                    if (xpath.includes('[') && !xpath.includes(']')) {
+                        log(`❌ ${name}: 角括弧が閉じられていません`, 'error');
+                        allValid = false;
+                    } else if (xpath.includes('(') && !xpath.includes(')')) {
+                        log(`❌ ${name}: 丸括弧が閉じられていません`, 'error');
+                        allValid = false;
+                    } else if (xpath.includes('"') && (xpath.split('"').length - 1) % 2 !== 0) {
+                        log(`❌ ${name}: 引用符が閉じられていません`, 'error');
+                        allValid = false;
+                    }
+                    
+                } catch (error) {
+                    log(`❌ ${name}: XPath構文エラー - ${error.message}`, 'error');
+                    allValid = false;
+                }
+            });
+            
+            if (allValid) {
+                log('🎉 すべてのXPathが有効です！', 'success');
+            } else {
+                log('⚠️ 一部のXPathに問題があります', 'warning');
+            }
+        }
+        
+        // 設定保存
+        async function saveXPathConfig() {
+            log('\n💾 XPath設定を保存します...', 'info');
+            
+            const config = {
+                name: document.getElementById('config-name').value || 'デフォルト設定',
+                targetSite: document.getElementById('target-site-url').value || '*',
+                xpaths: {
+                    messageInput: document.getElementById('message-input-xpath').value,
+                    sendButton: document.getElementById('send-button-xpath').value,
+                    messageDisplay: document.getElementById('message-display-xpath').value
+                },
+                created: new Date().toISOString()
+            };
+            
+            try {
+                // Chrome storageに保存
+                const existingConfigs = await chrome.storage.local.get(['xpathConfigs']);
+                const configs = existingConfigs.xpathConfigs || [];
+                
+                // 同じ名前の設定があれば更新、なければ追加
+                const existingIndex = configs.findIndex(c => c.name === config.name);
+                if (existingIndex >= 0) {
+                    configs[existingIndex] = config;
+                    log(`🔄 既存設定を更新: ${config.name}`, 'info');
+                } else {
+                    configs.push(config);
+                    log(`➕ 新規設定を追加: ${config.name}`, 'info');
+                }
+                
+                await chrome.storage.local.set({ xpathConfigs: configs });
+                log('✅ 設定保存完了', 'success');
+                
+                // 保存済み設定を再読み込み
+                loadSavedConfigs();
+                
+            } catch (error) {
+                log(`❌ 設定保存エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        // 設定リセット
+        function resetXPathConfig() {
+            log('\n🔄 XPath設定をリセットします...', 'info');
+            
+            document.getElementById('message-input-xpath').value = '';
+            document.getElementById('send-button-xpath').value = '';
+            document.getElementById('message-display-xpath').value = '';
+            document.getElementById('target-site-url').value = '';
+            document.getElementById('config-name').value = '';
+            
+            log('✅ 設定リセット完了', 'success');
+        }
+        
+        // 保存済み設定読み込み
+        async function loadSavedConfigs() {
+            try {
+                const result = await chrome.storage.local.get(['xpathConfigs']);
+                const configs = result.xpathConfigs || [];
+                
+                const savedConfigsDiv = document.getElementById('saved-configs');
+                
+                if (configs.length === 0) {
+                    savedConfigsDiv.innerHTML = '<p>保存済み設定はありません</p>';
+                    return;
+                }
+                
+                let html = '';
+                configs.forEach((config, index) => {
+                    html += `
+                        <div class="xpath-item">
+                            <div class="xpath-label">📋 ${config.name}</div>
+                            <div class="xpath-description">
+                                対象サイト: ${config.targetSite}<br>
+                                作成日時: ${new Date(config.created).toLocaleString()}
+                            </div>
+                            <div class="button-group">
+                                <button class="btn btn-primary" onclick="loadConfig(${index})">
+                                    📥 読み込み
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteConfig(${index})">
+                                    🗑️ 削除
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                savedConfigsDiv.innerHTML = html;
+                
+            } catch (error) {
+                log(`❌ 設定読み込みエラー: ${error.message}`, 'error');
+            }
+        }
+        
+        // 設定読み込み
+        async function loadConfig(index) {
+            try {
+                const result = await chrome.storage.local.get(['xpathConfigs']);
+                const configs = result.xpathConfigs || [];
+                
+                if (index >= 0 && index < configs.length) {
+                    const config = configs[index];
+                    
+                    document.getElementById('config-name').value = config.name;
+                    document.getElementById('target-site-url').value = config.targetSite;
+                    document.getElementById('message-input-xpath').value = config.xpaths.messageInput || '';
+                    document.getElementById('send-button-xpath').value = config.xpaths.sendButton || '';
+                    document.getElementById('message-display-xpath').value = config.xpaths.messageDisplay || '';
+                    
+                    log(`📥 設定読み込み完了: ${config.name}`, 'success');
+                }
+            } catch (error) {
+                log(`❌ 設定読み込みエラー: ${error.message}`, 'error');
+            }
+        }
+        
+        // 設定削除
+        async function deleteConfig(index) {
+            try {
+                const result = await chrome.storage.local.get(['xpathConfigs']);
+                const configs = result.xpathConfigs || [];
+                
+                if (index >= 0 && index < configs.length) {
+                    const configName = configs[index].name;
+                    configs.splice(index, 1);
+                    
+                    await chrome.storage.local.set({ xpathConfigs: configs });
+                    log(`🗑️ 設定削除完了: ${configName}`, 'info');
+                    
+                    loadSavedConfigs();
+                }
+            } catch (error) {
+                log(`❌ 設定削除エラー: ${error.message}`, 'error');
+            }
+        }
+        
+        // 設定エクスポート
+        async function exportConfigs() {
+            try {
+                const result = await chrome.storage.local.get(['xpathConfigs']);
+                const configs = result.xpathConfigs || [];
+                
+                const dataStr = JSON.stringify(configs, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `xpath-configs-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                
+                log('📤 設定エクスポート完了', 'success');
+                
+            } catch (error) {
+                log(`❌ エクスポートエラー: ${error.message}`, 'error');
+            }
+        }
+        
+        // 設定インポート
+        function importConfigs() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = async (event) => {
+                try {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    
+                    const text = await file.text();
+                    const importedConfigs = JSON.parse(text);
+                    
+                    await chrome.storage.local.set({ xpathConfigs: importedConfigs });
+                    log('📥 設定インポート完了', 'success');
+                    
+                    loadSavedConfigs();
+                    
+                } catch (error) {
+                    log(`❌ インポートエラー: ${error.message}`, 'error');
+                }
+            };
+            
+            input.click();
+        }
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!chrome.runtime) {
+                log('❌ Chrome拡張機能が読み込まれていません', 'error');
+            } else {
+                log('✅ XPath設定管理ページが読み込まれました', 'success');
+                loadSavedConfigs();
+            }
+        });
+    </script>
+</body>
+</html>

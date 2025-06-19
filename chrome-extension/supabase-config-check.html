@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase設定確認 / Supabase Configuration Check</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .config-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            background: #f0f8ff;
+        }
+        
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .config-label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .config-value {
+            font-family: 'Courier New', monospace;
+            background: #f4f4f4;
+            padding: 5px 10px;
+            border-radius: 3px;
+            max-width: 400px;
+            overflow-wrap: break-word;
+        }
+        
+        .status-good {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .test-button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto;
+            width: 300px;
+        }
+        
+        .test-button:hover {
+            background: linear-gradient(45deg, #2980b9, #1f618d);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            color: #27ae60;
+        }
+        
+        .error {
+            color: #e74c3c;
+        }
+        
+        .info {
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Supabase設定確認<br>Supabase Configuration Check</h1>
+        
+        <div class="config-section">
+            <h3>📊 現在の設定状況 / Current Configuration Status</h3>
+            
+            <div class="config-item">
+                <span class="config-label">Supabase URL:</span>
+                <span class="config-value" id="supabase-url">確認中...</span>
+            </div>
+            
+            <div class="config-item">
+                <span class="config-label">APIキー:</span>
+                <span class="config-value" id="api-key-status">確認中...</span>
+            </div>
+            
+            <div class="config-item">
+                <span class="config-label">設定ソース:</span>
+                <span class="config-value" id="config-source">確認中...</span>
+            </div>
+            
+            <div class="config-item">
+                <span class="config-label">接続状態:</span>
+                <span class="config-value" id="connection-status">確認中...</span>
+            </div>
+        </div>
+        
+        <div class="config-section">
+            <h3>🧪 設定テスト / Configuration Test</h3>
+            
+            <button class="test-button" onclick="checkSupabaseConfig()">
+                🔍 Supabase設定確認 / Check Supabase Config
+            </button>
+            
+            <button class="test-button" onclick="testSupabaseConnection()">
+                🌐 Supabase接続テスト / Test Supabase Connection
+            </button>
+            
+            <div class="results" id="test-results"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = document.getElementById('test-results');
+        
+        function log(message, className = '') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            testResults.innerHTML += `<span class="${className}">${logEntry}</span>`;
+            testResults.scrollTop = testResults.scrollHeight;
+        }
+        
+        function updateConfigDisplay(elementId, value, isGood = true) {
+            const element = document.getElementById(elementId);
+            element.textContent = value;
+            element.className = `config-value ${isGood ? 'status-good' : 'status-error'}`;
+        }
+        
+        // Supabase設定確認
+        async function checkSupabaseConfig() {
+            testResults.innerHTML = '';
+            log('🔍 Supabase設定確認を開始します...', 'info');
+            
+            try {
+                // background.jsから設定情報を取得
+                const response = await new Promise((resolve, reject) => {
+                    chrome.runtime.sendMessage({ type: 'GET_SUPABASE_CONFIG' }, (response) => {
+                        if (chrome.runtime.lastError) {
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            resolve(response);
+                        }
+                    });
+                });
+                
+                if (response && response.success) {
+                    const config = response.config;
+                    
+                    log('✅ 設定情報取得成功', 'success');
+                    log(`📊 URL: ${config.url}`, 'info');
+                    log(`🔑 APIキー設定: ${config.keySet ? '設定済み' : '未設定'}`, config.keySet ? 'success' : 'error');
+                    log(`🔍 APIキープレビュー: ${config.keyPreview}`, 'info');
+                    
+                    // 画面表示を更新
+                    updateConfigDisplay('supabase-url', config.url, true);
+                    updateConfigDisplay('api-key-status', config.keySet ? `設定済み (${config.keyPreview})` : '未設定', config.keySet);
+                    updateConfigDisplay('config-source', 'background.js (ハードコード)', true);
+                    updateConfigDisplay('connection-status', '設定確認完了', true);
+                    
+                } else {
+                    log('❌ 設定情報取得失敗', 'error');
+                    log(`エラー: ${response?.error || '不明なエラー'}`, 'error');
+                    
+                    updateConfigDisplay('api-key-status', 'エラー', false);
+                    updateConfigDisplay('connection-status', '設定確認失敗', false);
+                }
+                
+            } catch (error) {
+                log(`❌ 設定確認例外: ${error.message}`, 'error');
+                updateConfigDisplay('connection-status', 'エラー', false);
+            }
+        }
+        
+        // Supabase接続テスト
+        async function testSupabaseConnection() {
+            log('\n🌐 Supabase接続テストを開始します...', 'info');
+            
+            try {
+                const response = await new Promise((resolve, reject) => {
+                    chrome.runtime.sendMessage({ type: 'TEST_CONNECTION' }, (response) => {
+                        if (chrome.runtime.lastError) {
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            resolve(response);
+                        }
+                    });
+                });
+                
+                if (response && response.success) {
+                    log('✅ Supabase接続テスト成功', 'success');
+                    log('🎉 APIキーは正常に動作しています', 'success');
+                    updateConfigDisplay('connection-status', '接続成功', true);
+                } else {
+                    log('❌ Supabase接続テスト失敗', 'error');
+                    log(`エラー: ${response?.error || '不明なエラー'}`, 'error');
+                    updateConfigDisplay('connection-status', '接続失敗', false);
+                }
+                
+            } catch (error) {
+                log(`❌ 接続テスト例外: ${error.message}`, 'error');
+                updateConfigDisplay('connection-status', '接続エラー', false);
+            }
+        }
+        
+        // 初期化時に設定確認
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!chrome.runtime) {
+                log('❌ Chrome拡張機能が読み込まれていません', 'error');
+                updateConfigDisplay('connection-status', '拡張機能未読み込み', false);
+            } else {
+                log('✅ Chrome拡張機能が読み込まれています', 'success');
+                // 自動的に設定確認を実行
+                setTimeout(checkSupabaseConfig, 500);
+            }
+        });
+    </script>
+</body>
+</html>

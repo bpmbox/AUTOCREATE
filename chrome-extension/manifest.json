@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Supabase AI President Monitor",
+  "version": "1.0",
+  "description": "AI社長とのリアルタイム通信 - Supabase監視・自動入力システム",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "background",
+    "scripting",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://rootomzbucovwdqsscqd.supabase.co/*",
+    "https://*.supabase.co/*",
+    "https://www.processmaker.com/*",
+    "https://*.skyoffice.me/*",
+    "http://localhost:*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.processmaker.com/*",
+        "https://*.skyoffice.me/*",
+        "https://*.supabase.co/*",
+        "http://localhost:*/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI社長監視システム"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["inject.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

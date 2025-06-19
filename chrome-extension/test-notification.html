@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chrome Extension Notification Test</title>
+</head>
+<body>
+    <h1>Chrome Extension Notification Test</h1>
+    <button onclick="testNotification()">Test Notification</button>
+    <div id="log"></div>
+
+    <script>
+        function log(message) {
+            document.getElementById('log').innerHTML += '<p>' + message + '</p>';
+        }
+
+        function testNotification() {
+            log('Testing notification...');
+            
+            // Chrome拡張機能にメッセージを送信
+            if (chrome && chrome.runtime) {
+                chrome.runtime.sendMessage({
+                    type: 'TEST_MINIMAL_NOTIFICATION'
+                }, (response) => {
+                    if (response && response.success) {
+                        log('✅ Notification test sent successfully');
+                    } else {
+                        log('❌ Notification test failed');
+                    }
+                });
+            } else {
+                log('❌ Chrome extension not available');
+            }
+        }
+    </script>
+</body>
+</html>
