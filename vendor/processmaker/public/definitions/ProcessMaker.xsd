@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<xsd:schema version="1.0" id="ProcessMaker"
+    targetNamespace="http://processmaker.com/BPMN/2.0/Schema.xsd" elementFormDefault="qualified"
+    xmlns="http://processmaker.com/BPMN/2.0/Schema.xsd"
+    xmlns:mstns="http://processmaker.com/BPMN/2.0/Schema.xsd"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL">
+
+    <xsd:import namespace="http://www.omg.org/spec/BPMN/20100524/MODEL" schemaLocation="BPMN20.xsd"/>
+
+    <xsd:complexType name="tPmTask">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tTask">
+                <xsd:attribute name="screenRef" type="xsd:string"/>
+                <xsd:attribute name="allowInterstitial" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="interstitialScreenRef" type="xsd:string"/>
+                <xsd:attribute name="screenVersion" type="xsd:string" use="optional"/>
+                <xsd:attribute name="dueIn" type="xsd:decimal"/>
+                <xsd:attribute name="dueInVariable" type="xsd:string" use="optional"/>
+                <xsd:attribute name="isDueInVariable" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="notifyAfterRouting" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="notifyToRequestCreator" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="assignment" type="xsd:string" default="requestor"/>
+                <xsd:attribute name="assignedUsers" type="xsd:string"/>
+                <xsd:attribute name="assignedGroups" type="xsd:string"/>
+                <xsd:attribute name="assignmentRules" type="xsd:string"/>
+                <xsd:attribute name="assignmentLock" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="allowReassignment" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="config" type="xsd:string" use="optional"/>
+                <xsd:attribute name="configEmail" type="xsd:string" use="optional"/>
+                <xsd:attribute name="isActionsByEmail" type="xsd:boolean" default="false"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmUserTask">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tUserTask">
+                <xsd:attribute name="screenRef" type="xsd:string"/>
+                <xsd:attribute name="allowInterstitial" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="interstitialScreenRef" type="xsd:string"/>
+                <xsd:attribute name="screenVersion" type="xsd:string" use="optional"/>
+                <xsd:attribute name="dueIn" type="xsd:decimal"/>
+                <xsd:attribute name="notifyAfterRouting" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="notifyToRequestCreator" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="assignment" type="xsd:string" default="requestor"/>
+                <xsd:attribute name="assignedUsers" type="xsd:string"/>
+                <xsd:attribute name="assignedGroups" type="xsd:string"/>
+                <xsd:attribute name="assignmentRules" type="xsd:string"/>
+                <xsd:attribute name="assignmentLock" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="allowReassignment" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="config" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmScriptTask">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tScriptTask">
+                <xsd:attribute name="scriptRef" type="xsd:string"/>
+                <xsd:attribute name="scriptVersion" type="xsd:string" use="optional"/>
+                <xsd:attribute name="config" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmServiceTask">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tServiceTask">
+                <xsd:attribute name="config" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmMessage">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tMessage">
+                <xsd:attribute name="payload" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmEndEvent">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tEndEvent">
+                <xsd:attribute name="screenRef" type="xsd:string" use="optional"/>
+                <xsd:attribute name="screenVersion" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmStartEvent">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tStartEvent">
+                <xsd:attribute name="assignment" type="xsd:string" use="optional"/>
+                <xsd:attribute name="assignedUsers" type="xsd:string" use="optional"/>
+                <xsd:attribute name="assignedGroups" type="xsd:string" use="optional"/>
+                <xsd:attribute name="config" type="xsd:string" use="optional"/>
+                <xsd:attribute name="allowInterstitial" type="xsd:boolean" default="false"/>
+                <xsd:attribute name="interstitialScreenRef" type="xsd:string"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmIntermediateCatchEvent">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tIntermediateCatchEvent">
+                <xsd:attribute name="allowedUsers" type="xsd:string" use="optional"/>
+                <xsd:attribute name="allowedGroups" type="xsd:string" use="optional"/>
+                <xsd:attribute name="whitelist" type="xsd:string" use="optional"/>
+                <xsd:attribute name="config" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmMessageEventDefinition">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tMessageEventDefinition">
+                <xsd:attribute name="variableName" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmSignalEventDefinition">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tSignalEventDefinition">
+                <xsd:attribute name="config" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmSequenceFlow">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tSequenceFlow">
+                <xsd:attribute name="config" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="tPmSignal">
+        <xsd:complexContent>
+            <xsd:extension base="bpmn:tSignal">
+                <xsd:attribute name="config" type="xsd:string" use="optional"/>
+                <xsd:attribute name="detail" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+</xsd:schema>
