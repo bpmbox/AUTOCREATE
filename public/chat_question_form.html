@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 AI チャット質問投稿</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .form-container {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .recent-questions {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e1e5e9;
+        }
+        
+        .recent-questions h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .question-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .question-meta {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI チャット質問投稿</h1>
+            <p>質問を投稿すると、AIが自動で回答してCopilotチャットに送信されます</p>
+        </div>
+        
+        <div class="form-container">
+            <form id="questionForm">
+                <div class="form-group">
+                    <label for="userName">👤 お名前（オプション）</label>
+                    <input type="text" id="userName" placeholder="山田太郎">
+                </div>
+                
+                <div class="form-group">
+                    <label for="question">❓ 質問内容 *</label>
+                    <textarea id="question" placeholder="こちらに質問を入力してください...&#10;&#10;例：&#10;- Pythonでファイルを読み込む方法を教えてください&#10;- JavaScriptの非同期処理について知りたいです&#10;- データベース設計のベストプラクティスは何ですか？" required></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    📤 質問を送信
+                </button>
+            </form>
+            
+            <div id="status" class="status"></div>
+            
+            <div class="recent-questions">
+                <h3>📋 最近の質問</h3>
+                <div id="recentQuestions">
+                    <!-- 最近の質問がここに表示されます -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2';
+        
+        // Supabase設定（実際の値に置き換えてください）
+        const SUPABASE_URL = 'https://rootomzbucovwdqsscqd.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvb3RvbXpidWNvdndkcXNzY3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4OTE4ODMsImV4cCI6MjA1MTQ2Nzg4M30.fYKOe-HPh4WUdvBhEJxakLWCMQBp4E90EDwARk7ucf8';
+        
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const form = document.getElementById('questionForm');
+        const statusDiv = document.getElementById('status');
+        const recentQuestionsDiv = document.getElementById('recentQuestions');
+        
+        // フォーム送信処理
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userName = document.getElementById('userName').value.trim();
+            const question = document.getElementById('question').value.trim();
+            
+            if (!question) {
+                showStatus('質問内容を入力してください', 'error');
+                return;
+            }
+            
+            // 送信ボタンを無効化
+            const submitBtn = form.querySelector('.submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '📤 送信中...';
+            
+            try {
+                // Supabaseに質問を投稿
+                const { data, error } = await supabase
+                    .from('chat_questions')
+                    .insert([
+                        {
+                            question: question,
+                            user_name: userName || '匿名ユーザー',
+                            status: 'pending'
+                        }
+                    ])
+                    .select();
+                
+                if (error) {
+                    throw error;
+                }
+                
+                showStatus('✅ 質問を送信しました！AIが回答を準備中です...', 'success');
+                
+                // フォームをリセット
+                document.getElementById('question').value = '';
+                
+                // 最近の質問を更新
+                loadRecentQuestions();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('❌ 送信に失敗しました: ' + error.message, 'error');
+            } finally {
+                // 送信ボタンを有効化
+                submitBtn.disabled = false;
+                submitBtn.textContent = '📤 質問を送信';
+            }
+        });
+        
+        // ステータス表示
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            // 3秒後に非表示
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 最近の質問を読み込み
+        async function loadRecentQuestions() {
+            try {
+                const { data, error } = await supabase
+                    .from('chat_questions')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                displayRecentQuestions(data);
+                
+            } catch (error) {
+                console.error('Error loading recent questions:', error);
+                recentQuestionsDiv.innerHTML = '<p style="color: #666;">最近の質問を読み込めませんでした</p>';
+            }
+        }
+        
+        // 最近の質問を表示
+        function displayRecentQuestions(questions) {
+            if (!questions || questions.length === 0) {
+                recentQuestionsDiv.innerHTML = '<p style="color: #666;">まだ質問がありません</p>';
+                return;
+            }
+            
+            const statusEmojis = {
+                'pending': '⏳ 処理待ち',
+                'processing': '🔄 処理中',
+                'completed': '✅ 完了',
+                'failed': '❌ 失敗'
+            };
+            
+            recentQuestionsDiv.innerHTML = questions.map(q => `
+                <div class="question-item">
+                    <div>${q.question}</div>
+                    <div class="question-meta">
+                        ${statusEmojis[q.status] || q.status} | 
+                        ${q.user_name} | 
+                        ${new Date(q.created_at).toLocaleString('ja-JP')}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // ページ読み込み時に最近の質問を表示
+        loadRecentQuestions();
+        
+        // 10秒ごとに最近の質問を更新
+        setInterval(loadRecentQuestions, 10000);
+    </script>
+</body>
+</html>

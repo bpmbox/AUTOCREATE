@@ -1,0 +1,14 @@
+# Supabase連携チャット自動応答システム用パッケージ
+
+# RPA・自動化
+pyautogui>=0.9.54
+pyperclip>=1.8.2
+
+# Supabase
+supabase>=2.0.0
+
+# OpenAI
+openai>=1.0.0
+
+# その他
+python-dotenv>=1.0.0
