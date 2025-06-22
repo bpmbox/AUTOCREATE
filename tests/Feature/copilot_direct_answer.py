@@ -619,6 +619,32 @@ class CopilotDirectAnswerSystem:
             original_user="user"
         )
 
+    def infinite_auto_loop(self, interval=3):
+        """無限自動ループモード（永続実行）"""
+        print(f"🔥 無限自動ループ開始（{interval}秒間隔）")
+        print("📍 座標固定: (1335, 1045)")
+        print("⚡ 永続監視モード - 手を離してください")
+        print("Ctrl+C で停止")
+        
+        # 座標を固定設定
+        self.chat_coordinates = {"x": 1335, "y": 1045}
+        
+        # 完全自動監視を実行
+        self.full_auto_monitoring(interval)
+    
+    def quick_start_auto_mode(self):
+        """クイック自動開始モード"""
+        print("⚡ クイック自動開始モード")
+        print("📍 座標自動設定: (1335, 1045)")
+        print("🚀 5秒間隔で自動監視開始")
+        
+        # 座標を自動設定
+        self.chat_coordinates = {"x": 1335, "y": 1045}
+        print("✅ 座標自動設定完了")
+        
+        # 自動監視を開始
+        self.full_auto_monitoring(5)
+
 def main():
     import sys
     
