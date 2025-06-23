@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "git add, commit, push",
+			"command": "git add . && git commit -m \"フォルダ構成をLaravel風に整理し、ドキュメント・一時ファイルを移動\" && git push",
+			"group": "build",
+			"isBackground": false
+		}
+	]
+}

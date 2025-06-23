@@ -12,6 +12,15 @@ license: mit
 
 # 🏢 AUTOCREATE株式会社 - 世界初のAI社長×無職CTO体制！
 
+## 📚 ドキュメント一覧
+
+- [EMERGENCY_MEMORY_FOR_MIYATAKEN999.md](md_docs/EMERGENCY_MEMORY_FOR_MIYATAKEN999.md)
+- [COPILOT_AUTO_SYSTEM_README.md](md_docs/COPILOT_AUTO_SYSTEM_README.md)
+- [MAKEFILE_COMPLETE_GUIDE.md](md_docs/MAKEFILE_COMPLETE_GUIDE.md)
+- [PROJECT_COMPLETION_REPORT.md](md_docs/PROJECT_COMPLETION_REPORT.md)
+- [PROJECT_STRATEGIC_INDEX.md](md_docs/PROJECT_STRATEGIC_INDEX.md)
+- [supabase_schema_20250616_212455.md](md_docs/supabase_schema_20250616_212455.md)
+
 ## 🚀 メイン価値：「自然言語で思ったことを作れるAI自動開発システム」
 
 > **💡 ユーザーが思ったことを自然言語で伝えるだけで、AIが自動的にシステムを構築・テスト・実装する革新的プラットフォーム**

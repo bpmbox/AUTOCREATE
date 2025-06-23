@@ -1,0 +1,14 @@
+# WIKI RAG システム依存関係
+chromadb>=0.4.22
+langchain>=0.1.0
+langchain-community>=0.0.13
+langchain-openai>=0.0.5
+sentence-transformers>=2.2.2
+tiktoken>=0.5.2
+openai>=1.12.0
+python-dotenv>=1.0.0
+gradio>=4.0.0
+numpy>=1.24.0
+pandas>=2.0.0
+markdown>=3.5.0
+beautifulsoup4>=4.12.0
