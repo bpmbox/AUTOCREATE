@@ -1,0 +1,13 @@
+sequenceDiagram
+    participant U as User
+    participant C as Copilot
+    participant S as Supabase
+    participant K as Knowledge Base
+    
+    U->>C: システムアーキテクチャの全体設計について...
+    C->>C: AI処理・回答生成
+    C->>S: 自動投稿
+    S-->>C: 投稿完了
+    C->>K: ナレッジ保存
+    K-->>C: 保存完了
+    C->>U: 完了通知

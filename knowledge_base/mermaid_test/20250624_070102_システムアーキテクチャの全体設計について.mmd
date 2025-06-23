@@ -1,0 +1,29 @@
+graph TB
+    subgraph "AI自動開発パイプライン"
+        Q[質問入力] --> AI[GitHub Copilot]
+        AI --> R[AI回答生成]
+    end
+    
+    subgraph "データ保存層"
+        S[Supabase]
+        K[ナレッジベース]
+        M[Mermaidダイアグラム]
+    end
+    
+    subgraph "外部連携"
+        N[Notion]
+        J[JIRA]
+        H[HuggingFace]
+    end
+    
+    R --> S
+    R --> K
+    K --> M
+    S --> N
+    S --> J
+    S --> H
+    
+    style AI fill:#ff9800
+    style S fill:#4caf50
+    style K fill:#2196f3
+    style M fill:#9c27b0

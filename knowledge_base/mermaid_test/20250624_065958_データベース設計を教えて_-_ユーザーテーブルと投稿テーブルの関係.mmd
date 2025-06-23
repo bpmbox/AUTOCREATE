@@ -1,0 +1,30 @@
+erDiagram
+    CHAT_HISTORY ||--o{ KNOWLEDGE_BASE : generates
+    CHAT_HISTORY {
+        int id
+        string ownerid
+        text messages
+        datetime created
+        string status
+        string tmp_file
+    }
+    
+    KNOWLEDGE_BASE {
+        int id
+        string question
+        string questioner
+        text copilot_response
+        datetime timestamp
+        string knowledge_type
+        json tags
+        boolean auto_generated
+    }
+    
+    MERMAID_DIAGRAMS ||--o{ KNOWLEDGE_BASE : visualizes
+    MERMAID_DIAGRAMS {
+        int id
+        string filename
+        string diagram_type
+        text content
+        datetime created
+    }

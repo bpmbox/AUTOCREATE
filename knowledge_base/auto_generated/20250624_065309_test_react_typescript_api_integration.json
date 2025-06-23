@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-06-24T06:53:09.556807",
+  "question": "React TypeScript プロジェクトでのAPI統合のベストプラクティスは？",
+  "questioner": "test-user",
+  "copilot_response": "React TypeScriptプロジェクトでのAPI統合のベストプラクティス：\n\n## 1. 型安全なAPI設計\n```typescript\ninterface ApiResponse<T> {\n  data: T;\n  status: number;\n  message: string;\n}\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n```\n\n## 2. Axiosベースのクライアント\n```typescript\nimport axios from 'axios';\n\nconst apiClient = axios.create({\n  baseURL: process.env.REACT_APP_API_URL,\n  timeout: 10000,\n});\n```\n\n## 3. React Queryの活用\n```typescript\nimport { useQuery } from '@tanstack/react-query';\n\nconst useUsers = () => {\n  return useQuery<User[]>({\n    queryKey: ['users'],\n    queryFn: () => apiClient.get<User[]>('/users').then(res => res.data)\n  });\n};\n```\n\n## 4. エラーハンドリング\n```typescript\nconst ErrorBoundary = ({ children }) => {\n  // エラーハンドリングロジック\n};\n```\n\nこのアプローチにより、型安全で保守性の高いAPI統合が実現できます。",
+  "auto_generated": true,
+  "knowledge_type": "copilot-ai-response",
+  "tags": [
+    "react",
+    "typescript",
+    "api"
+  ],
+  "test_mode": true
+}

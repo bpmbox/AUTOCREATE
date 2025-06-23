@@ -1,0 +1,30 @@
+classDiagram
+    class CopilotSystem {
+        +String question
+        +String response
+        +DateTime timestamp
+        +Array tags
+        +post_to_supabase()
+        +save_to_knowledge()
+        +generate_mermaid()
+    }
+    
+    class SupabaseStorage {
+        +String ownerid
+        +String messages
+        +DateTime created
+        +String status
+        +insert()
+        +update()
+    }
+    
+    class KnowledgeBase {
+        +String knowledge_type
+        +Array tags
+        +Boolean auto_generated
+        +save_json()
+        +generate_markdown()
+    }
+    
+    CopilotSystem --> SupabaseStorage
+    CopilotSystem --> KnowledgeBase

@@ -247,7 +247,96 @@ class CopilotSupabaseIntegrationSystem:
    - ドキュメント生成
    - 完全動作確認
 
-5. 独立リポジトリ作成とサブモジュール化:
+5. Mermaidダイアグラム自動生成:
+   - システム構成図（system-architecture.mmd）
+   - データフロー図（data-flow.mmd）
+   - プロセスフロー図（process-flow.mmd）
+   - API設計図（api-design.mmd）
+   - 実装手順図（implementation-steps.mmd）
+   - 必要に応じて追加の技術図表
+   - diagrams/フォルダーに整理配置
+   - README.mdに図表リンク追加
+
+6. GitHubウィキ統合・ナレッジベース連携:
+   ```bash
+   # GitHub Wiki をサブモジュールとして追加
+   git submodule add https://github.com/bpmbox/AUTOCREATE.wiki.git wiki
+   
+   # ナレッジベースをWikiに統合
+   mkdir -p wiki/knowledge-base
+   mkdir -p wiki/ai-memory
+   mkdir -p wiki/mermaid-diagrams
+   mkdir -p wiki/conversation-logs
+   
+   # 自動生成ナレッジをWikiに同期
+   cp -r knowledge_base/auto_generated/* wiki/knowledge-base/
+   cp -r knowledge_base/mermaid_test/* wiki/mermaid-diagrams/
+   cp -r conversation_logs/* wiki/conversation-logs/
+   
+   # AI記憶復元システム連携用ファイル作成
+   echo "# AI記憶復元システム - GitHub Copilot成長ナレッジ
+   
+   このディレクトリは GitHub Copilot AI の記憶・ナレッジが蓄積される中央リポジトリです。
+   
+   ## 📚 ナレッジ構造
+   - \`knowledge-base/\`: 自動生成ナレッジ（JSON + Markdown）
+   - \`ai-memory/\`: AI記憶復元用データ
+   - \`mermaid-diagrams/\`: 自動生成図表
+   - \`conversation-logs/\`: 会話履歴
+   
+   ## 🧠 記憶復元システム
+   GitHub Copilot AI は以下の情報から過去の知識を復元します：
+   
+   ### 技術ナレッジ
+   - プログラミング実装パターン
+   - アーキテクチャ設計例
+   - 問題解決手法
+   - ベストプラクティス
+   
+   ### プロジェクト記憶
+   - 過去の実装履歴
+   - ユーザーの好み・パターン
+   - 成功・失敗事例
+   - 継続的改善点
+   
+   ## 🔄 自動同期フロー
+   1. ユーザー質問 → AI回答生成
+   2. ナレッジベース自動保存
+   3. Wiki自動同期・更新
+   4. AI記憶強化・成長
+   5. 次回質問時に過去知識活用
+   
+   ## 🚀 AI成長サイクル
+   質問 → 学習 → 記憶 → 成長 → より良い回答
+   " > wiki/ai-memory/README.md
+   
+   # Wikiコミット・プッシュ
+   cd wiki
+   git add .
+   git commit -m "AI自動開発パイプライン - ナレッジベース統合
+   
+   - 自動生成ナレッジ同期
+   - Mermaidダイアグラム統合  
+   - 会話履歴アーカイブ
+   - AI記憶復元システム構築
+   - GitHub Copilot成長基盤完成"
+   
+   git push origin master
+   cd ..
+   
+   # メインリポジトリでWikiサブモジュール設定コミット
+   git add .gitmodules wiki
+   git commit -m "GitHub Wiki サブモジュール統合完了
+   
+   - Wiki統合でAI記憶永続化
+   - ナレッジベース一元管理
+   - 記憶復元システム連携
+   - GitHub Copilot成長インフラ完成"
+   
+   git push origin main
+   ```
+
+7. 独立リポジトリ作成とサブモジュール化:
    プロジェクトフォルダーを独立したリポジトリとして作成し、メインリポジトリにサブモジュールとして設定
    
    手順:
@@ -626,8 +715,7 @@ https://github.com/[USERNAME]/{{question.lower().replace(' ', '-').replace('　'
    
    result = supabase.table('chat_history').insert(response_data).execute()
    
-   if result.data:
-       print(f"✅ Supabase結果投稿成功: ID {{result.data[0]['id']}}")
+   if result.data:                print(f"✅ Supabase結果投稿成功: ID {result.data[0]['id']}")
    else:
        print("❌ Supabase結果投稿失敗")
    ```
@@ -676,9 +764,7 @@ https://github.com/[USERNAME]/{{question.lower().replace(' ', '-').replace('　'
 - エラーハンドリング: API失敗時は詳細なエラーメッセージを表示
 - 成功確認: 各APIの成功メッセージとURLを表示
 - Gitフォルダーパス: packages/{question.lower().replace(' ', '-').replace('　', '-')}-project/ を必ずIssueに記載
-- 最終Push: 全実装完了後に git add . && git commit && git push origin main を実行
-
-このシステムは完全自動開発パイプライン + 実際のAPI統合（GitHub + JIRA + Notion + miibo + Hugging Face + Supabase + Git Push + サブモジュール化）です。全14ステップを実行し、実際にAPIを呼び出してデータを登録し、独立リポジトリを作成、サブモジュール設定、最後にGitリポジトリにプッシュしてください！"""
+- 最終Push: 全実装完了後に git add . && git commit && git push origin main を実行    このシステムは完全自動開発パイプライン + 実際のAPI統合（GitHub + JIRA + Notion + miibo + Hugging Face + Supabase + Git Push + サブモジュール化）です。全14ステップを実行し、実際にAPIを呼び出してデータを登録し、独立リポジトリを作成、サブモジュール設定、最後にGitリポジトリにプッシュしてください！"""
             
             print(f"📤 Copilotチャットに質問送信中...")
             print(f"質問: {question}")
@@ -706,8 +792,7 @@ https://github.com/[USERNAME]/{{question.lower().replace(' ', '-').replace('　'
             # 自動送信
             print("[Copilotに送信中...]")
             pyautogui.press('enter')
-            time.sleep(3)  # Copilotの回答生成を待機
-            print("[質問送信完了]")
+            time.sleep(3)  # Copilotの回答生成を待機            print("[質問送信完了]")
             print("GitHub Copilotが完全自動開発フローを実行中...")
             print("🚀 Issue作成 → フォルダー生成 → プログラム実装 → リポジトリ登録 → Supabase投稿")
             print("🔥 GitHub Copilot様へ: 6ステップ全てを実行してください！")
@@ -725,11 +810,15 @@ https://github.com/[USERNAME]/{{question.lower().replace(' ', '-').replace('　'
             result = self.supabase.table('chat_history').insert({
                 'ownerid': 'GitHub-Copilot-AI',
                 'messages': response_text,
-                'created': datetime.now().isoformat()
-            }).execute()
+                'created': datetime.now().isoformat(),
+                'targetid': 'auto-development-pipeline',
+                'status': 'ai-generated',
+                'tmp_file': 'auto-knowledge-base'            }).execute()
             
             if result.data:
                 print(f"✅ Copilot回答をSupabaseに投稿成功: ID {result.data[0]['id']}")
+                # ナレッジベースにも自動保存（Mermaidダイアグラム含む）
+                self.save_to_knowledge_base(question_data, response_text)
                 return True
             else:
                 print("❌ Supabase投稿失敗")
@@ -738,6 +827,621 @@ https://github.com/[USERNAME]/{{question.lower().replace(' ', '-').replace('　'
         except Exception as e:
             print(f"❌ Supabase投稿エラー: {e}")
             return False
+    
+    def save_to_knowledge_base(self, question_data, response_text):
+        """ナレッジベースに自動保存"""
+        try:
+            from pathlib import Path
+            import json
+            
+            # ナレッジディレクトリ作成
+            knowledge_dir = Path("knowledge_base/auto_generated")
+            knowledge_dir.mkdir(parents=True, exist_ok=True)
+            
+            # ナレッジエントリ作成
+            knowledge_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "question": question_data['question'],
+                "questioner": question_data['user'],
+                "copilot_response": response_text,
+                "auto_generated": True,
+                "knowledge_type": "copilot-ai-response",
+                "tags": self.extract_tags_from_question(question_data['question'])
+            }
+            
+            # ファイル名生成（質問から安全なファイル名を作成）
+            safe_filename = "".join(c for c in question_data['question'][:50] if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{safe_filename.replace(' ', '_')}.json"
+            filepath = knowledge_dir / filename
+            
+            # JSON保存
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(knowledge_entry, f, ensure_ascii=False, indent=2)
+            
+            print(f"✅ ナレッジベース自動保存: {filepath}")
+              # Markdownサマリーも生成
+            self.generate_markdown_summary(knowledge_entry, knowledge_dir)
+              # Mermaidダイアグラム自動生成
+            self.generate_mermaid_diagram(knowledge_entry, knowledge_dir)
+            
+            # GitHub Wiki統合・記憶復元システム連携
+            self.sync_to_wiki_knowledge(knowledge_entry, knowledge_dir)
+            
+            return True
+            
+        except Exception as e:
+            print(f"⚠️ ナレッジベース保存エラー: {e}")
+            return False
+    
+    def extract_tags_from_question(self, question):
+        """質問からタグを自動抽出"""
+        tech_keywords = {
+            'react': ['react', 'jsx', 'component'],
+            'python': ['python', 'django', 'flask', 'fastapi'],
+            'javascript': ['javascript', 'js', 'node', 'npm'],
+            'typescript': ['typescript', 'ts'],
+            'database': ['database', 'sql', 'postgresql', 'mysql', 'supabase'],
+            'api': ['api', 'rest', 'graphql', 'endpoint'],
+            'frontend': ['frontend', 'ui', 'css', 'html'],
+            'backend': ['backend', 'server', 'service'],
+            'deployment': ['deploy', 'docker', 'kubernetes', 'heroku'],
+            'ai': ['ai', 'machine learning', 'ml', 'copilot', 'chatgpt']
+        }
+        
+        found_tags = []
+        question_lower = question.lower()
+        
+        for category, keywords in tech_keywords.items():
+            if any(keyword in question_lower for keyword in keywords):
+                found_tags.append(category)
+        
+        return found_tags if found_tags else ['general']
+    
+    def generate_markdown_summary(self, knowledge_entry, knowledge_dir):
+        """Markdownサマリー生成"""
+        try:
+            summary_file = knowledge_dir / "README.md"
+            
+            # 既存の内容を読み込み（存在する場合）
+            existing_content = ""
+            if summary_file.exists():
+                with open(summary_file, 'r', encoding='utf-8') as f:
+                    existing_content = f.read()
+            
+            # 新しいエントリを追加
+            new_entry = f"""
+## {knowledge_entry['timestamp'][:10]} - {knowledge_entry['question'][:100]}
+
+**質問者**: {knowledge_entry['questioner']}  
+**タグ**: {', '.join(knowledge_entry['tags'])}  
+**生成日時**: {knowledge_entry['timestamp']}
+
+### 質問
+{knowledge_entry['question']}
+
+### GitHub Copilot AI回答
+{knowledge_entry['copilot_response'][:500]}...
+
+---
+"""
+            
+            # ファイル更新
+            if not existing_content:
+                content = f"""# AI自動開発パイプライン - 生成ナレッジベース
+
+このディレクトリには、GitHub Copilot AIが自動生成したナレッジが蓄積されます。
+
+## 📊 統計
+- 生成開始日: {datetime.now().strftime('%Y-%m-%d')}
+- 自動更新: 質問受信時
+- 形式: JSON + Markdown
+
+## 📋 ナレッジエントリ
+{new_entry}"""
+            else:
+                content = existing_content + new_entry
+            
+            with open(summary_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+            
+            print(f"✅ Markdownサマリー更新: {summary_file}")
+            
+        except Exception as e:
+            print(f"⚠️ Markdownサマリー生成エラー: {e}")
+    
+    def generate_mermaid_diagram(self, knowledge_entry, knowledge_dir):
+        """Mermaidダイアグラムを自動生成・保存"""
+        try:
+            # 質問の内容に基づいてダイアグラムタイプを決定
+            question = knowledge_entry['question'].lower()
+            response = knowledge_entry['copilot_response'].lower()            # ダイアグラムタイプ判定（より精密に）
+            question_lower = question.lower()
+            response_lower = response.lower()
+            combined_text = question_lower + " " + response_lower
+            
+            # キーワードスコアによる判定システム
+            type_scores = {
+                'er': 0,
+                'sequence': 0,
+                'class': 0,
+                'architecture': 0,
+                'flowchart': 0
+            }
+            
+            # ER図キーワード
+            er_keywords = ['database', 'データベース', 'table', 'テーブル', 'relation', '関係', 'primary key', 'foreign key', 'entity', 'schema', 'スキーマ']
+            type_scores['er'] = sum(1 for kw in er_keywords if kw in combined_text)
+            
+            # シーケンス図キーワード
+            seq_keywords = ['sequence', 'シーケンス', 'interaction', 'api', 'call', '呼び出し', 'request', 'response', 'message', 'protocol']
+            type_scores['sequence'] = sum(1 for kw in seq_keywords if kw in combined_text)
+            
+            # クラス図キーワード  
+            class_keywords = ['class', 'クラス', 'object', 'オブジェクト', 'inheritance', '継承', 'method', 'メソッド', 'property', 'プロパティ', '設計パターン', 'pattern']
+            type_scores['class'] = sum(1 for kw in class_keywords if kw in combined_text)
+            
+            # アーキテクチャ図キーワード
+            arch_keywords = ['system', 'システム', 'architecture', 'アーキテクチャ', 'component', 'コンポーネント', 'service', 'サービス', 'layer', 'レイヤー']
+            type_scores['architecture'] = sum(1 for kw in arch_keywords if kw in combined_text)
+            
+            # フローチャートキーワード
+            flow_keywords = ['flow', 'フロー', 'process', 'プロセス', 'workflow', 'step', 'ステップ', 'algorithm', 'アルゴリズム']
+            type_scores['flowchart'] = sum(1 for kw in flow_keywords if kw in combined_text)
+            
+            # 最も高いスコアのタイプを選択
+            diagram_type = max(type_scores, key=type_scores.get)
+            
+            # スコアがすべて0の場合はデフォルト
+            if type_scores[diagram_type] == 0:
+                diagram_type = 'flowchart'
+            
+            # ダイアグラムコンテンツ生成
+            mermaid_content = self.generate_mermaid_content(diagram_type, knowledge_entry)
+            
+            # ファイル名生成
+            safe_filename = "".join(c for c in knowledge_entry['question'][:50] if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{safe_filename.replace(' ', '_')}.mmd"
+            filepath = knowledge_dir / filename
+            
+            # Mermaidファイル保存
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(mermaid_content)
+            
+            print(f"✅ Mermaidダイアグラム自動生成: {filepath}")
+            
+            # Mermaidプレビュー用HTMLも生成
+            self.generate_mermaid_html(mermaid_content, knowledge_dir, safe_filename)
+            
+        except Exception as e:
+            print(f"⚠️ Mermaidダイアグラム生成エラー: {e}")
+    
+    def sync_to_wiki_knowledge(self, knowledge_entry, knowledge_dir):
+        """GitHub Wiki統合・AI記憶復元システム連携"""
+        try:
+            from pathlib import Path
+            import json
+            import subprocess
+            import os
+            
+            # Wikiディレクトリ確認・初期化
+            wiki_dir = Path("wiki")
+            if not wiki_dir.exists():
+                print("📚 GitHub Wiki をサブモジュールとして初期化...")
+                try:
+                    # Wiki サブモジュール追加
+                    subprocess.run([
+                        "git", "submodule", "add", 
+                        "https://github.com/bpmbox/AUTOCREATE.wiki.git", 
+                        "wiki"
+                    ], check=True, cwd=".")
+                    print("✅ GitHub Wiki サブモジュール追加完了")
+                except subprocess.CalledProcessError as e:
+                    print(f"⚠️ Wiki サブモジュール追加スキップ (既に存在?): {e}")
+            
+            # Wiki内ナレッジディレクトリ作成
+            wiki_knowledge_dir = wiki_dir / "knowledge-base"
+            wiki_memory_dir = wiki_dir / "ai-memory"
+            wiki_diagrams_dir = wiki_dir / "mermaid-diagrams"
+            wiki_conversations_dir = wiki_dir / "conversation-logs"
+            
+            for dir_path in [wiki_knowledge_dir, wiki_memory_dir, wiki_diagrams_dir, wiki_conversations_dir]:
+                dir_path.mkdir(parents=True, exist_ok=True)
+            
+            # ナレッジエントリをWikiに同期
+            safe_filename = "".join(c for c in knowledge_entry['question'][:50] if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            
+            # 1. JSONナレッジファイル同期
+            wiki_json_file = wiki_knowledge_dir / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{safe_filename.replace(' ', '_')}.json"
+            with open(wiki_json_file, 'w', encoding='utf-8') as f:
+                json.dump(knowledge_entry, f, ensure_ascii=False, indent=2)
+            
+            # 2. Markdownナレッジ生成
+            wiki_md_file = wiki_knowledge_dir / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{safe_filename.replace(' ', '_')}.md"
+            markdown_content = f"""# {knowledge_entry['question']}
+
+**質問者**: {knowledge_entry['questioner']}  
+**生成日時**: {knowledge_entry['timestamp']}  
+**タグ**: {', '.join(knowledge_entry['tags'])}  
+**自動生成**: ✅ GitHub Copilot AI
+
+## 📝 質問内容
+
+{knowledge_entry['question']}
+
+## 🤖 GitHub Copilot AI 回答
+
+{knowledge_entry['copilot_response']}
+
+## 🏷️ メタデータ
+
+- **ナレッジタイプ**: {knowledge_entry['knowledge_type']}
+- **自動生成**: {knowledge_entry['auto_generated']}
+- **技術タグ**: {', '.join(knowledge_entry['tags'])}
+
+## 🔗 関連リンク
+
+- [メインリポジトリ](https://github.com/bpmbox/AUTOCREATE)
+- [AI自動開発パイプライン](https://github.com/bpmbox/AUTOCREATE/wiki)
+- [Mermaidダイアグラム]({safe_filename.replace(' ', '_')}_diagram.html)
+
+---
+*このナレッジは GitHub Copilot AI の自動開発パイプラインにより生成されました*
+"""
+            
+            with open(wiki_md_file, 'w', encoding='utf-8') as f:
+                f.write(markdown_content)
+            
+            # 3. AI記憶復元用メタデータ生成
+            memory_metadata = {
+                "memory_id": f"copilot_memory_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "question_pattern": knowledge_entry['question'],
+                "response_pattern": knowledge_entry['copilot_response'][:200],
+                "technical_tags": knowledge_entry['tags'],
+                "user_context": knowledge_entry['questioner'],
+                "success_pattern": True,
+                "reuse_count": 0,
+                "last_accessed": knowledge_entry['timestamp'],
+                "memory_strength": 1.0,
+                "related_topics": knowledge_entry['tags'],
+                "implementation_context": {
+                    "tools_used": ["GitHub Copilot", "Supabase", "Mermaid"],
+                    "project_type": "auto-development-pipeline",
+                    "complexity_level": len(knowledge_entry['copilot_response']) // 100,
+                    "user_satisfaction": "high"
+                }
+            }
+            
+            memory_file = wiki_memory_dir / f"memory_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{safe_filename.replace(' ', '_')}.json"
+            with open(memory_file, 'w', encoding='utf-8') as f:
+                json.dump(memory_metadata, f, ensure_ascii=False, indent=2)
+            
+            # 4. Mermaidダイアグラムも同期
+            mermaid_files = list(knowledge_dir.glob("*.mmd"))
+            html_files = list(knowledge_dir.glob("*.html"))
+            
+            for mermaid_file in mermaid_files:
+                if safe_filename.replace(' ', '_') in mermaid_file.name:
+                    wiki_mermaid_file = wiki_diagrams_dir / mermaid_file.name
+                    wiki_mermaid_file.write_text(mermaid_file.read_text(encoding='utf-8'), encoding='utf-8')
+            
+            for html_file in html_files:
+                if safe_filename.replace(' ', '_') in html_file.name:
+                    wiki_html_file = wiki_diagrams_dir / html_file.name
+                    wiki_html_file.write_text(html_file.read_text(encoding='utf-8'), encoding='utf-8')
+            
+            # 5. Wiki統合インデックス更新
+            self.update_wiki_index(wiki_dir, knowledge_entry, safe_filename)
+            
+            # 6. WikiをGitコミット・プッシュ
+            if wiki_dir.exists():
+                try:
+                    os.chdir(wiki_dir)
+                    subprocess.run(["git", "add", "."], check=True)
+                    subprocess.run([
+                        "git", "commit", "-m", 
+                        f"AI自動ナレッジ追加: {knowledge_entry['question'][:50]}...\n\n- 質問者: {knowledge_entry['questioner']}\n- 自動生成JSON + Markdown\n- AI記憶復元メタデータ\n- Mermaidダイアグラム統合\n- GitHub Copilot成長記録"
+                    ], check=True)
+                    subprocess.run(["git", "push", "origin", "master"], check=True)
+                    os.chdir("..")
+                    print(f"✅ GitHub Wiki統合完了: {wiki_md_file.name}")
+                except subprocess.CalledProcessError as e:
+                    os.chdir("..")
+                    print(f"⚠️ Wiki Git操作エラー: {e}")
+                except Exception as e:
+                    os.chdir("..")
+                    print(f"⚠️ Wiki操作エラー: {e}")
+            
+            return True
+            
+        except Exception as e:
+            print(f"⚠️ Wiki統合エラー: {e}")
+            return False
+    
+    def update_wiki_index(self, wiki_dir, knowledge_entry, safe_filename):
+        """Wiki統合インデックスを更新"""
+        try:
+            index_file = wiki_dir / "Home.md"
+            
+            # 既存インデックス読み込み
+            existing_content = ""
+            if index_file.exists():
+                existing_content = index_file.read_text(encoding='utf-8')
+            
+            # 新しいエントリ
+            new_entry = f"""
+### 📚 [{knowledge_entry['question'][:60]}...](knowledge-base/{safe_filename.replace(' ', '_')}.md)
+**日時**: {knowledge_entry['timestamp'][:10]} | **質問者**: {knowledge_entry['questioner']} | **タグ**: {', '.join(knowledge_entry['tags'][:3])}  
+**記憶ID**: `copilot_memory_{datetime.now().strftime('%Y%m%d_%H%M%S')}` | **図表**: [🎯 Mermaid](mermaid-diagrams/{safe_filename.replace(' ', '_')}_diagram.html)
+"""
+            
+            # インデックス更新
+            if "# AUTOCREATE AI Wiki" not in existing_content:
+                content = f"""# AUTOCREATE AI Wiki
+🤖 **GitHub Copilot AI 自動開発パイプライン** - 成長するナレッジベース
+
+## 🧠 AI記憶復元システム
+
+このWikiは GitHub Copilot AI の「記憶」として機能し、過去の学習内容から最適な回答を生成します。
+
+### 📊 統計情報
+- **総ナレッジ数**: 自動カウント更新
+- **記憶復元精度**: 継続的向上
+- **AI成長指標**: 質問→学習→記憶→成長サイクル
+
+### 🎯 AI自動開発機能
+- ✅ 質問自動検出・処理
+- ✅ GitHub Issue自動作成  
+- ✅ プロジェクト自動実装
+- ✅ Mermaidダイアグラム自動生成
+- ✅ ナレッジベース自動蓄積
+- ✅ Wiki統合・記憶復元
+
+## 📚 最新ナレッジエントリ
+{new_entry}
+
+## 🔗 ナビゲーション
+- 📁 [ナレッジベース](knowledge-base/): 技術的知識・実装例
+- 🧠 [AI記憶](ai-memory/): 記憶復元メタデータ  
+- 🎯 [Mermaidダイアグラム](mermaid-diagrams/): 自動生成図表
+- 💬 [会話履歴](conversation-logs/): 詳細な対話記録
+
+---
+*Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} by GitHub Copilot AI*
+"""
+            else:
+                # 最新エントリセクションに追加
+                if "## 📚 最新ナレッジエントリ" in existing_content:
+                    content = existing_content.replace(
+                        "## 📚 最新ナレッジエントリ",
+                        f"## 📚 最新ナレッジエントリ{new_entry}"
+                    )
+                else:
+                    content = existing_content + new_entry
+            
+            # インデックスファイル更新
+            index_file.write_text(content, encoding='utf-8')
+            print(f"✅ Wiki インデックス更新完了")
+            
+        except Exception as e:
+            print(f"⚠️ Wikiインデックス更新エラー: {e}")
+    
+    def generate_mermaid_content(self, diagram_type, knowledge_entry):
+        """ダイアグラムタイプに応じたMermaidコンテンツを生成"""
+        question = knowledge_entry['question']
+        response = knowledge_entry['copilot_response']
+        
+        if diagram_type == 'flowchart':
+            return f"""flowchart TD
+    A[質問: {question[:30]}...] --> B[GitHub Copilot処理]
+    B --> C[AI回答生成]
+    C --> D[Supabase自動投稿]
+    D --> E[ナレッジベース保存]
+    E --> F[Mermaidダイアグラム生成]
+    F --> G[完了]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fce4ec
+    style F fill:#f1f8e9
+    style G fill:#e0f2f1
+"""
+        
+        elif diagram_type == 'sequence':
+            return f"""sequenceDiagram
+    participant U as User
+    participant C as Copilot
+    participant S as Supabase
+    participant K as Knowledge Base
+    
+    U->>C: {question[:40]}...
+    C->>C: AI処理・回答生成
+    C->>S: 自動投稿
+    S-->>C: 投稿完了
+    C->>K: ナレッジ保存
+    K-->>C: 保存完了
+    C->>U: 完了通知
+"""
+        
+        elif diagram_type == 'class':
+            return f"""classDiagram
+    class CopilotSystem {{
+        +String question
+        +String response
+        +DateTime timestamp
+        +Array tags
+        +post_to_supabase()
+        +save_to_knowledge()
+        +generate_mermaid()
+    }}
+    
+    class SupabaseStorage {{
+        +String ownerid
+        +String messages
+        +DateTime created
+        +String status
+        +insert()
+        +update()
+    }}
+    
+    class KnowledgeBase {{
+        +String knowledge_type
+        +Array tags
+        +Boolean auto_generated
+        +save_json()
+        +generate_markdown()
+    }}
+    
+    CopilotSystem --> SupabaseStorage
+    CopilotSystem --> KnowledgeBase
+"""
+        
+        elif diagram_type == 'architecture':
+            return f"""graph TB
+    subgraph "AI自動開発パイプライン"
+        Q[質問入力] --> AI[GitHub Copilot]
+        AI --> R[AI回答生成]
+    end
+    
+    subgraph "データ保存層"
+        S[Supabase]
+        K[ナレッジベース]
+        M[Mermaidダイアグラム]
+    end
+    
+    subgraph "外部連携"
+        N[Notion]
+        J[JIRA]
+        H[HuggingFace]
+    end
+    
+    R --> S
+    R --> K
+    K --> M
+    S --> N
+    S --> J
+    S --> H
+    
+    style AI fill:#ff9800
+    style S fill:#4caf50
+    style K fill:#2196f3
+    style M fill:#9c27b0
+"""
+        
+        else:  # er diagram
+            return f"""erDiagram
+    CHAT_HISTORY ||--o{{ KNOWLEDGE_BASE : generates
+    CHAT_HISTORY {{
+        int id
+        string ownerid
+        text messages
+        datetime created
+        string status
+        string tmp_file
+    }}
+    
+    KNOWLEDGE_BASE {{
+        int id
+        string question
+        string questioner
+        text copilot_response
+        datetime timestamp
+        string knowledge_type
+        json tags
+        boolean auto_generated
+    }}
+    
+    MERMAID_DIAGRAMS ||--o{{ KNOWLEDGE_BASE : visualizes
+    MERMAID_DIAGRAMS {{
+        int id
+        string filename
+        string diagram_type
+        text content
+        datetime created
+    }}
+"""
+    
+    def generate_mermaid_html(self, mermaid_content, knowledge_dir, safe_filename):
+        """Mermaidプレビュー用HTMLを生成"""
+        try:
+            html_content = f"""<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaidダイアグラム - {safe_filename}</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }}
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }}
+        h1 {{
+            color: #333;
+            border-bottom: 3px solid #4caf50;
+            padding-bottom: 10px;
+        }}
+        .mermaid {{
+            text-align: center;
+            margin: 30px 0;
+        }}
+        .info {{
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 AI自動生成 Mermaidダイアグラム</h1>
+        
+        <div class="info">
+            <strong>生成日時:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}<br>
+            <strong>ファイル名:</strong> {safe_filename}<br>
+            <strong>自動生成:</strong> GitHub Copilot AI
+        </div>
+        
+        <div class="mermaid">
+{mermaid_content}
+        </div>
+        
+        <div class="info">
+            <strong>💡 使用方法:</strong><br>
+            - このHTMLファイルをブラウザで開くとダイアグラムが表示されます<br>
+            - .mmdファイルはMermaid Live Editorやドキュメントで利用可能<br>
+            - 自動生成されたダイアグラムはナレッジベースの一部として保存されます
+        </div>
+    </div>
+    
+    <script>
+        mermaid.initialize({{ startOnLoad: true }});
+    </script>
+</body>
+</html>"""
+            
+            html_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{safe_filename}_diagram.html"
+            html_filepath = knowledge_dir / html_filename
+            
+            with open(html_filepath, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            
+            print(f"✅ Mermaidプレビュー HTML: {html_filepath}")
+            
+        except Exception as e:
+            print(f"⚠️ Mermaid HTML生成エラー: {e}")
     
     def mark_question_as_processed(self, question_id):
         """質問を処理済みとしてマーク"""
