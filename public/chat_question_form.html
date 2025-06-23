@@ -38,10 +38,25 @@
             font-size: 2em;
             margin-bottom: 10px;
         }
-        
-        .header p {
+          .header p {
             opacity: 0.9;
             font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        
+        .integration-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
         .form-container {
@@ -148,10 +163,15 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🤖 AI チャット質問投稿</h1>
-            <p>質問を投稿すると、AIが自動で回答してCopilotチャットに送信されます</p>
+    <div class="container">        <div class="header">
+            <h1>🤖 AI 自動システム作成システム</h1>
+            <p>質問を投稿すると、AIが自動でプロジェクトを作成し、GitHub/JIRA/Notion/Supabaseに連携します</p>
+            <div class="integration-badges">
+                <span class="badge">🐙 GitHub</span>
+                <span class="badge">📋 JIRA</span>
+                <span class="badge">📝 Notion</span>
+                <span class="badge">⚡ Supabase</span>
+            </div>
         </div>
         
         <div class="form-container">
@@ -160,21 +180,18 @@
                     <label for="userName">👤 お名前（オプション）</label>
                     <input type="text" id="userName" placeholder="山田太郎">
                 </div>
-                
-                <div class="form-group">
-                    <label for="question">❓ 質問内容 *</label>
-                    <textarea id="question" placeholder="こちらに質問を入力してください...&#10;&#10;例：&#10;- Pythonでファイルを読み込む方法を教えてください&#10;- JavaScriptの非同期処理について知りたいです&#10;- データベース設計のベストプラクティスは何ですか？" required></textarea>
+                  <div class="form-group">
+                    <label for="question">❓ プロジェクト要求内容 *</label>
+                    <textarea id="question" placeholder="作成したいシステムやプロジェクトの内容を入力してください...&#10;&#10;例：&#10;- PHP でバルクデータ処理システムを作成してください&#10;- React + TypeScript でToDoアプリを作成してください&#10;- Python でWebスクレイピングツールを作成してください&#10;- Laravel でECサイトのバックエンドAPIを作成してください" required></textarea>
                 </div>
-                
-                <button type="submit" class="submit-btn">
-                    📤 質問を送信
+                  <button type="submit" class="submit-btn">
+                    � プロジェクト作成を開始
                 </button>
             </form>
             
             <div id="status" class="status"></div>
-            
-            <div class="recent-questions">
-                <h3>📋 最近の質問</h3>
+              <div class="recent-questions">
+                <h3>📋 最近のプロジェクト作成リクエスト</h3>
                 <div id="recentQuestions">
                     <!-- 最近の質問がここに表示されます -->
                 </div>
@@ -206,11 +223,10 @@
                 showStatus('質問内容を入力してください', 'error');
                 return;
             }
-            
-            // 送信ボタンを無効化
+              // 送信ボタンを無効化
             const submitBtn = form.querySelector('.submit-btn');
             submitBtn.disabled = true;
-            submitBtn.textContent = '📤 送信中...';
+            submitBtn.textContent = '� プロジェクト作成中...';
             
             try {
                 // Supabaseに質問を投稿
@@ -229,7 +245,7 @@
                     throw error;
                 }
                 
-                showStatus('✅ 質問を送信しました！AIが回答を準備中です...', 'success');
+                showStatus('✅ プロジェクト作成リクエストを送信しました！AIが自動でプロジェクトを作成し、GitHub、JIRA、Notion、Supabaseに連携します...', 'success');
                 
                 // フォームをリセット
                 document.getElementById('question').value = '';
@@ -243,7 +259,7 @@
             } finally {
                 // 送信ボタンを有効化
                 submitBtn.disabled = false;
-                submitBtn.textContent = '📤 質問を送信';
+                submitBtn.textContent = '� プロジェクト作成を開始';
             }
         });
         
@@ -273,17 +289,15 @@
                 }
                 
                 displayRecentQuestions(data);
-                
-            } catch (error) {
+                  } catch (error) {
                 console.error('Error loading recent questions:', error);
-                recentQuestionsDiv.innerHTML = '<p style="color: #666;">最近の質問を読み込めませんでした</p>';
+                recentQuestionsDiv.innerHTML = '<p style="color: #666;">最近のプロジェクトリクエストを読み込めませんでした</p>';
             }
         }
-        
-        // 最近の質問を表示
+          // 最近の質問を表示
         function displayRecentQuestions(questions) {
             if (!questions || questions.length === 0) {
-                recentQuestionsDiv.innerHTML = '<p style="color: #666;">まだ質問がありません</p>';
+                recentQuestionsDiv.innerHTML = '<p style="color: #666;">まだプロジェクトリクエストがありません</p>';
                 return;
             }
             
