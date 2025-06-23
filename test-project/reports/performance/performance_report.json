@@ -1,0 +1,50 @@
+{
+  "timestamp": 1750669461.9746327,
+  "system_info": {
+    "cpu_count": 20,
+    "memory_total": 34090356736,
+    "platform": "Windows"
+  },
+  "test_summary": {
+    "total_tests": 3,
+    "total_execution_time": 0.6079123020172119,
+    "average_execution_time": 0.2026374340057373,
+    "peak_memory_usage": 811008,
+    "average_throughput": 322.04467805811726
+  },
+  "metrics": [
+    {
+      "test_name": "CPU集約処理",
+      "execution_time": 0.20379090309143066,
+      "memory_usage": -26296320,
+      "cpu_usage": 99.2,
+      "peak_memory": 4096,
+      "iterations": 50,
+      "throughput": 245.34951875436525,
+      "timestamp": 1750669461.3809175,
+      "metadata": {}
+    },
+    {
+      "test_name": "メモリ集約処理",
+      "execution_time": 0.35901379585266113,
+      "memory_usage": 3014656,
+      "cpu_usage": 100.3,
+      "peak_memory": 811008,
+      "iterations": 20,
+      "throughput": 55.70816562215893,
+      "timestamp": 1750669461.911363,
+      "metadata": {}
+    },
+    {
+      "test_name": "I/O操作",
+      "execution_time": 0.04510760307312012,
+      "memory_usage": -1933312,
+      "cpu_usage": 116.2,
+      "peak_memory": 0,
+      "iterations": 30,
+      "throughput": 665.0763497978277,
+      "timestamp": 1750669461.972927,
+      "metadata": {}
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "summary": {
+    "timestamp": 1750669424.0564306,
+    "total_duration": 0.504899263381958,
+    "total_tests": 4,
+    "statistics": {
+      "total": 4,
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 1
+    },
+    "success_rate": 50.0,
+    "fastest_test": 0.00038313865661621094,
+    "slowest_test": 0.5009257793426514,
+    "average_duration": 0.12554562091827393
+  },
+  "results": [
+    {
+      "test_name": "基本的な計算テスト",
+      "status": "passed",
+      "duration": 0.00041294097900390625,
+      "message": "テスト成功",
+      "traceback": "",
+      "assertions": 0,
+      "timestamp": 1750669423.5523934,
+      "metadata": {}
+    },
+    {
+      "test_name": "失敗デモテスト",
+      "status": "failed",
+      "duration": 0.00046062469482421875,
+      "message": "アサーション失敗: ",
+      "traceback": "",
+      "assertions": 0,
+      "timestamp": 1750669423.5526466,
+      "metadata": {}
+    },
+    {
+      "test_name": "エラーデモテスト",
+      "status": "error",
+      "duration": 0.00038313865661621094,
+      "message": "実行エラー: テストエラーのデモ",
+      "traceback": "",
+      "assertions": 0,
+      "timestamp": 1750669423.5529299,
+      "metadata": {}
+    },
+    {
+      "test_name": "時間のかかるテスト",
+      "status": "passed",
+      "duration": 0.5009257793426514,
+      "message": "テスト成功",
+      "traceback": "",
+      "assertions": 0,
+      "timestamp": 1750669423.5534678,
+      "metadata": {}
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-🎯 GitHub Copilot直接回答システム（完全版）
+🎯 GitHub Copilot直接回答システム
 
-Supabaseから質問を取得 → VS Codeチャットに送信 → Copilotの回答をSupabaseに投稿
-VS Codeチャット経由でCopilotとつながり、回答をSupabaseに自動登録
+Supabaseから質問を取得 → VS Codeチャットに直接入力
+OpenAI API不要、GitHub Copilotが直接回答
 """
 
 import os
@@ -12,11 +12,8 @@ import json
 import pyautogui
 import pyperclip
 import traceback
-import sys
-import subprocess
 from datetime import datetime
 from dotenv import load_dotenv
-from pathlib import Path
 
 # 環境変数読み込み
 load_dotenv()
@@ -28,9 +25,9 @@ except ImportError as e:
     print("📦 pip install supabase python-dotenv pyautogui pyperclip")
     exit(1)
 
-class CopilotSupabaseIntegrationSystem:
+class CopilotDirectAnswerSystem:
     def __init__(self):
-        print("🚀 GitHub Copilot-Supabase統合システム初期化中...")
+        print("🚀 GitHub Copilot直接回答システム初期化中...")
         
         # 環境変数取得
         self.supabase_url = os.getenv('SUPABASE_URL')
@@ -57,34 +54,13 @@ class CopilotSupabaseIntegrationSystem:
         
         print("🎯 システム初期化完了")
     
-    def check_file_changes(self):
-        """ファイルの変更を監視してホットリロード"""
-        current_file = Path(__file__)
-        last_modified = current_file.stat().st_mtime
-        
-        while True:
-            try:
-                current_modified = current_file.stat().st_mtime
-                if current_modified > last_modified:
-                    print("\n🔥 ファイル変更検出! ホットリロード実行中...")
-                    print("🔄 プログラムを再起動します...")
-                    time.sleep(1)
-                      # 現在のプロセスを新しいプロセスで置き換え
-                    os.execv(sys.executable, [sys.executable] + sys.argv)
-                
-                time.sleep(2)  # 2秒間隔でチェック
-            except Exception as e:
-                print(f"⚠️ ファイル監視エラー: {e}")
-                time.sleep(5)
-    
     def infinite_auto_loop(self, interval=3):
-        """無限自動ループモード（完全に手を離せる）+ ホットリロード"""
+        """無限自動ループモード（完全に手を離せる）"""
         print("🔥 無限自動ループモード開始!")
         print(f"⚡ {interval}秒間隔で永続監視")
         print("🤖 新着メッセージを完全自動で処理")
         print("📍 座標固定: (1335, 1045)")
         print("🚀 GitHub Copilotが自動回答")
-        print("🔄 ホットリロード: ファイル変更時自動再起動")
         print("="*50)
         
         # 座標を固定設定
@@ -96,7 +72,8 @@ class CopilotSupabaseIntegrationSystem:
         last_id = 0
         check_count = 0
         success_count = 0
-          # 現在の最新IDを取得
+        
+        # 現在の最新IDを取得
         try:
             result = self.supabase.table('chat_history') \
                 .select('id') \
@@ -112,23 +89,8 @@ class CopilotSupabaseIntegrationSystem:
         print("\n🎯 無限ループ開始 - Ctrl+C で停止")
         print("="*50)
         
-        # ホットリロード用のファイル監視設定
-        current_file = Path(__file__)
-        last_modified = current_file.stat().st_mtime
-        
         try:
             while True:  # 無限ループ
-                # ファイル変更チェック（ホットリロード）
-                try:
-                    current_modified = current_file.stat().st_mtime
-                    if current_modified > last_modified:
-                        print("\n🔥 ファイル変更検出! ホットリロード実行中...")
-                        print("🔄 プログラムを再起動します...")
-                        time.sleep(1)
-                        os.execv(sys.executable, [sys.executable] + sys.argv)
-                except Exception as e:
-                    print(f"⚠️ ホットリロードエラー: {e}")
-                
                 check_count += 1
                 current_time = datetime.now().strftime('%H:%M:%S')
                 
@@ -171,7 +133,8 @@ class CopilotSupabaseIntegrationSystem:
                                 print(f"  ⏭️ 空メッセージスキップ")
                                 last_id = max(last_id, msg_id)
                                 continue
-                              # ユーザーメッセージ検出
+                            
+                            # ユーザーメッセージ検出
                             question_data = {
                                 'id': msg_id,
                                 'question': message,
@@ -181,14 +144,14 @@ class CopilotSupabaseIntegrationSystem:
                             
                             print(f"\n🎯 ユーザーメッセージ検出!")
                             print(f"👤 {owner}: {message[:50]}...")
-                              # VS CodeチャットでCopilotに質問 → 回答をSupabaseに投稿
-                            if self.send_to_copilot_and_get_response(question_data):
+                              # AIが直接Supabaseに返信
+                            if self.generate_ai_reply_and_send(question_data):
                                 success_count += 1
                                 processed_ids.add(msg_id)
                                 self.mark_question_as_processed(msg_id)
-                                print(f"✅ Copilot質問送信成功! (累計: {success_count}件)")
+                                print(f"✅ AI自動返信成功! (累計: {success_count}件)")
                             else:
-                                print("❌ 送信失敗")
+                                print("❌ 転送失敗")
                             
                             last_id = max(last_id, msg_id)
                             time.sleep(1)  # メッセージ間の待機
@@ -208,69 +171,20 @@ class CopilotSupabaseIntegrationSystem:
             print(f"🆔 最終処理ID: {last_id}")
             print("✨ お疲れ様でした!")
     
-    def send_to_copilot_and_get_response(self, question_data):
-        """VS CodeチャットでCopilotに質問を送信し、回答をSupabaseに投稿"""
+    def post_question_to_chat_auto(self, question_data):
+        """質問をチャットに自動投稿（確認なし、完全自動）"""
         if not self.chat_coordinates:
             print("❌ チャット座標が未設定")
             return False
         
         try:
             question = question_data['question']
-            user = question_data['user']            # GitHub Copilotに分かりやすい質問形式に変換
-            formatted_question = f"""ユーザーからの質問
-
-質問者: {user}
-質問: {question}
-
-[完全自動開発フロー実行をお願いします]
-
-1. 詳細な回答生成: この質問に対して実用的で具体的な回答を作成
-
-2. GitHub Issue作成: 
-   GitHub CLIコマンド例:
-   gh issue create --repo "bpmbox/AUTOCREATE" --title "{question} - 実装要求" --body "# {question}の実装\\n\\n## 要件\\n- {question}に関する実装\\n\\n## 仕様\\n- 詳細な技術仕様\\n\\n## 実装計画\\n- ステップバイステップの実装手順" --label "ai-automation"
-   - タイトル: 「{question}」の実装
-   - 説明: 要件、仕様、実装計画を詳細記載
-   - ラベル: ai-automation (重要: このラベルを必ず使用)
-
-3. プロジェクトフォルダー作成:
-   - フォルダー名: `{question.lower().replace(' ', '-').replace('　', '-')}-project`
-   - 必要なファイル構成を自動生成
-   - README.md、実装ファイル、設定ファイル等
-
-4. プログラム自動実装:
-   - 要求された機能を完全実装
-   - テストコード作成
-   - ドキュメント生成
-   - 完全動作確認
-
-5. GitHub Issue更新とリポジトリ作成:
-   GitHub CLI実行例:
-   # Issue作成（メインリポジトリに統合報告）
-   gh issue create --repo "bpmbox/AUTOCREATE" --title "{question} - 完全実装完了" --body "実装詳細とリポジトリリンク" --label "ai-automation"
-   
-   # 新リポジトリ作成（必要に応じて）
-   gh repo create "project-name" --public
-   git push origin main
-   - 実装完了報告のIssue作成
-   - 新しいリポジトリURL報告
-   - 成果物の詳細説明
-
-6. Supabase投稿: 
-   - ownerid: 'GitHub-Copilot-AI'
-   - messages: 回答内容 + GitHub Issue URL + リポジトリURL + 実装結果詳細
-   - created: 現在時刻
-
-重要な実行ガイド:
-- GitHub CLI認証確認: gh auth status
-- リポジトリ: bpmbox/AUTOCREATE にIssue作成
-- ラベル: "ai-automation" 必須使用
-- 文字コード: UTF-8設定で実行
-- PowerShell例: $env:PYTHONUTF8=1; gh issue create...
-
-このシステムは完全自動開発パイプラインです。全ステップを実行してください！"""
+            user = question_data['user']
             
-            print(f"📤 Copilotチャットに質問送信中...")
+            # GitHub Copilotに分かりやすい質問形式に変換
+            formatted_question = f"""📋 ユーザーからの質問\n\n質問者: {user}\n質問: {question}\n\nこの内容でGitHub Issueを作成し、専用フォルダーを作成してプログラムを実装してください。実装結果や進捗をSupabaseに送信してください。\n"""
+            
+            print(f"📤 Copilotチャットに質問自動投稿中...")
             print(f"質問: {question}")
             
             x, y = self.chat_coordinates['x'], self.chat_coordinates['y']
@@ -292,41 +206,18 @@ class CopilotSupabaseIntegrationSystem:
             pyautogui.hotkey('ctrl', 'v')
             time.sleep(1.5)
             
-            print("[質問入力完了]")
-            # 自動送信
-            print("[Copilotに送信中...]")
-            pyautogui.press('enter')
-            time.sleep(3)  # Copilotの回答生成を待機
-            print("[質問送信完了]")
-            print("GitHub Copilotが完全自動開発フローを実行中...")
-            print("🚀 Issue作成 → フォルダー生成 → プログラム実装 → リポジトリ登録 → Supabase投稿")
-            print("🔥 GitHub Copilot様へ: 6ステップ全てを実行してください！")
+            print("📝 質問入力完了")
             
+            # 自動送信（確認なし）
+            print("🚀 自動送信中...")
+            pyautogui.press('enter')
+            time.sleep(2)
+            print("✅ 質問送信完了")
+            print("💡 GitHub Copilotが回答を生成中...")
             return True
                 
         except Exception as e:
-            print(f"❌ チャット送信エラー: {e}")
-            return False
-    
-    def post_copilot_response_to_supabase(self, question_data, response_text):
-        """Copilotの回答をSupabaseに投稿"""
-        try:
-            # AI/Copilotの回答をSupabaseに投稿
-            result = self.supabase.table('chat_history').insert({
-                'ownerid': 'GitHub-Copilot-AI',
-                'messages': response_text,
-                'created': datetime.now().isoformat()
-            }).execute()
-            
-            if result.data:
-                print(f"✅ Copilot回答をSupabaseに投稿成功: ID {result.data[0]['id']}")
-                return True
-            else:
-                print("❌ Supabase投稿失敗")
-                return False
-                
-        except Exception as e:
-            print(f"❌ Supabase投稿エラー: {e}")
+            print(f"❌ チャット投稿エラー: {e}")
             return False
     
     def mark_question_as_processed(self, question_id):
@@ -353,21 +244,22 @@ def main():
         print("🤖 手を離してください - 完全自動運転中")
         print("-" * 50)
         
-        system = CopilotSupabaseIntegrationSystem()
+        system = CopilotDirectAnswerSystem()
         if hasattr(system, 'supabase') and system.supabase:
             # 座標を自動設定
             system.chat_coordinates = {"x": 1335, "y": 1045}
-            print("✅ 座標自動設定完了")            
+            print("✅ 座標自動設定完了")
+            
             # 無限自動ループを即座に開始
             system.infinite_auto_loop(3)
         else:
             print("❌ システム初期化失敗")
         return
     
-    print("🎯 GitHub Copilot-Supabase統合システム")
-    print("VS Codeチャット経由でCopilotと連携し、回答をSupabaseに自動投稿")
+    print("🎯 GitHub Copilot直接回答システム")
+    print("手動モードは現在利用できません")
     print("自動モードで起動してください:")
-    print("python copilot_direct_answer_fixed.py --auto")
+    print("python copilot_direct_answer.py --auto")
 
 if __name__ == "__main__":
     main()
