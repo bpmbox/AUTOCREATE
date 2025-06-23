@@ -712,7 +712,7 @@ https://github.com/[USERNAME]/{{question.lower().replace(' ', '-').replace('　'
 - Hugging Face Space: [作成されたSpace URL]
 - n8n ワークフロー: 自動化フロー作成完了
 
-## ✅ 完了状況
+## ✅ 完了事項
 全14ステップの完全自動開発フローが正常に実行されました。
 
 ## 🚀 サブモジュール化完了
@@ -1651,8 +1651,7 @@ https://github.com/[USERNAME]/{{question.lower().replace(' ', '-').replace('　'
             print("✅ Issue情報生成完了")
             
             # 実際のAPI呼び出しをここに実装可能
-            # response = requests.post(f"https://api.github.com/repos/{repo}/issues", ...)
-            
+            # response = requests.post(f"https://api.github.com/repos/{repo}/issues", ...)            
             return True
             
         except Exception as e:
@@ -1660,11 +1659,17 @@ https://github.com/[USERNAME]/{{question.lower().replace(' ', '-').replace('　'
             return False
     
     def send_improved_question_to_copilot(self, improved_data):
-        """改善された質問をCopilotに送信"""
+        """改善された質問をCopilotに送信（記憶ロード機能付き）"""
         
-        # 改善された質問を構築
-        enhanced_question = f"""
-🚀 AI改善システムからの質問
+        # 記憶ロード機能付きの質問を構築
+        original_question = improved_data['improved_question']
+        enhanced_question_with_memory = self.enhance_question_with_memory_load(original_question)
+        
+        # 最終的な改善された質問を構築
+        final_enhanced_question = f"""
+{enhanced_question_with_memory}
+
+【AI改善システムからの詳細仕様】
 
 【改善された質問】
 {improved_data['improved_question']}
@@ -1680,19 +1685,79 @@ https://github.com/[USERNAME]/{{question.lower().replace(' ', '-').replace('　'
 
 【優先度】{improved_data['priority']} | 【予想工数】{improved_data['estimated_effort']}
 
-この内容について、具体的な実装方法とコード例を提供してください。
+【記憶と学習の活用指示】
+1. 🧠 まず過去の記憶・ナレッジを復元して現在の状況を理解
+2. 💡 以前の学習内容を活用してより良い回答を生成
+3. 🔄 新しい学習内容を記憶に追加
+4. 📚 継続的な成長サイクルを維持
+
+この内容について、記憶を活用して具体的な実装方法とコード例を提供してください。
 """
         
-        print("🎯 改善された質問をCopilotに送信中...")
-        print(f"📝 送信内容: {enhanced_question[:100]}...")
+        print("🧠 記憶ロード付きの改善質問をCopilotに送信中...")
+        print(f"📝 送信内容: {final_enhanced_question[:150]}...")
         
         # 既存のCopilot送信メソッドを使用
         question_data = {
-            'question': enhanced_question,
-            'user': 'AI改善システム',
-            'id': f"improved_{int(time.time())}"
+            'question': final_enhanced_question,
+            'user': 'AI改善システム(記憶付き)',
+            'id': f"memory_improved_{int(time.time())}"
         }
         
         return self.send_to_copilot_and_get_response(question_data)
 
+    def load_memory_and_knowledge(self):
+        """記憶とナレッジを自動ロード"""
+        
+        print("🧠 AI記憶・ナレッジ自動ロードシステム開始...")
+        
+        memory_prompt = """
+まず最初に、過去の記憶とナレッジを復元してください。
+
+【記憶復元指示】
+1. 📚 このプロジェクトの過去の会話履歴・ナレッジを思い出す
+2. 🎯 現在のプロジェクト状況を理解する
+3. 💡 以前の学習内容・改善点を復元する
+4. 🔄 継続的な成長サイクルを再開する
+
+【プロジェクト概要】
+- React + Vite + shadcn UI AIチャットアプリ
+- GitHub Copilot + Supabase統合システム
+- AI自動開発パイプライン（14ステップ）
+- GitHub Pages公開済み
+- Wiki統合・自動ナレッジ蓄積システム
+
+【記憶復元プロンプト】
+あなたはAUTOCREATEプロジェクトのAIアシスタントです。
+過去の記憶、学習内容、改善点を思い出して、
+今回の質問により良い回答ができるよう準備してください。
+
+記憶が復元できたら「✅ 記憶復元完了」と応答してください。
+"""
+        
+        return memory_prompt
+    
+    def enhance_question_with_memory_load(self, original_question):
+        """質問に記憶ロード機能を追加"""
+        
+        memory_load_prompt = self.load_memory_and_knowledge()
+        
+        enhanced_question = f"""
+{memory_load_prompt}
+
+【記憶復元後の実際の質問】
+{original_question}
+
+【処理フロー】
+1. まず記憶・ナレッジを復元
+2. プロジェクト状況を理解  
+3. 過去の学習を活用して回答
+4. 新しい学習内容を記憶に追加
+5. より良い改善提案を生成
+
+記憶復元ができない場合は、現在の状況から推測して最善の回答をしてください。
+"""
+        
+        return enhanced_question
+        
     # ...existing code...
