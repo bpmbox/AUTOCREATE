@@ -7,9 +7,8 @@ console.log('🤖 AI社長注入スクリプト読み込み');
 
 // ページレベルでのSupabase監視
 window.aiPresidentInject = {
-    supabaseConfig: {
-        url: 'https://rootomzbucovwdqsscqd.supabase.co',
-        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvb3RvbXpidWNvdndkcXNzY3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4OTE4ODMsImV4cCI6MjA1MTQ2Nzg4M30.fYKOe-HPh4WUdvBhEJxakLWCMQBp4E90EDwARk7ucf8'
+    supabaseConfig: {        url: 'https://rootomzbucovwdqsscqd.supabase.co',
+        key: 'TEMP_PLACEHOLDER_FOR_ENV_VAR'
     },
     
     // リアルタイム監視

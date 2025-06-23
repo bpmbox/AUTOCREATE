@@ -30,7 +30,7 @@ class GitHubCopilotAutomation:
     def __init__(self):
         # Supabase設定
         url = "https://tnojlywkucnzgakwrgep.supabase.co"
-        key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRub2pseXdrdWNuemdha3dyZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5NDY3MzcsImV4cCI6MjA1MDUyMjczN30.DX1MfV4aPa_IwRhFm8RZq8fQjOFSNk6TlBTY5b3VfAw"
+        key = "ENV_SUPABASE_KEY_PLACEHOLDER"
         self.supabase = create_client(url, key)
         
         # チャット座標管理

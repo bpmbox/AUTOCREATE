@@ -6,9 +6,8 @@
 console.log('🤖 AI社長監視システム起動中...');
 
 // Supabase設定
-const SUPABASE_CONFIG = {
-    url: 'https://rootomzbucovwdqsscqd.supabase.co',
-    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvb3RvbXpidWNvdndkcXNzY3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4OTE4ODMsImV4cCI6MjA1MTQ2Nzg4M30.fYKOe-HPh4WUdvBhEJxakLWCMQBp4E90EDwARk7ucf8'
+const SUPABASE_CONFIG = {    url: 'https://rootomzbucovwdqsscqd.supabase.co',
+    key: 'TEMP_PLACEHOLDER_FOR_ENV_VAR'
 };
 
 let lastCheckTime = new Date().toISOString();

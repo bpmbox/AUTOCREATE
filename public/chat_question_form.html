@@ -201,10 +201,9 @@
 
     <script type="module">
         import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2';
-        
-        // Supabase設定（実際の値に置き換えてください）
+          // Supabase設定（環境変数から取得予定）
         const SUPABASE_URL = 'https://rootomzbucovwdqsscqd.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvb3RvbXpidWNvdndkcXNzY3FkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4OTE4ODMsImV4cCI6MjA1MTQ2Nzg4M30.fYKOe-HPh4WUdvBhEJxakLWCMQBp4E90EDwARk7ucf8';
+        const SUPABASE_ANON_KEY = 'TEMP_PLACEHOLDER_FOR_ENV_VAR';
         
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
