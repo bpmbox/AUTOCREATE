@@ -1,3 +1,6 @@
 [submodule "packages/php-bulk-batch-processing-project"]
 	path = packages/php-bulk-batch-processing-project
 	url = https://github.com/miyataken999/php-bulk-batch-processing.git
+[submodule "wiki"]
+	path = wiki
+	url = https://github.com/bpmbox/AUTOCREATE.wiki.git

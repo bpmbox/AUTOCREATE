@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUTOCREATE - AI自動開発パイプライン</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 2rem;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .feature {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .feature h3 {
+            margin-bottom: 1rem;
+            color: #ffd700;
+        }
+        .cta-buttons {
+            margin-top: 3rem;
+        }
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            margin: 0.5rem;
+            background: #ff6b6b;
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background: #ff5252;
+        }
+        .btn-primary {
+            background: #4ecdc4;
+            font-size: 1.2rem;
+        }
+        .btn-primary:hover {
+            background: #26d0ce;
+        }
+        .footer {
+            margin-top: 3rem;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AUTOCREATE</h1>
+        <p class="subtitle">AI自動開発パイプライン - React+Vite+shadcn UI</p>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>🤖 AI チャット</h3>
+                <p>GitHub Copilot統合<br>Supabase連携<br>リアルタイム対話</p>
+            </div>
+            <div class="feature">
+                <h3>📚 ナレッジベース</h3>
+                <p>GitHub Wiki統合<br>AI記憶復元システム<br>継続的学習・成長</p>
+            </div>
+            <div class="feature">
+                <h3>⚙️ 自動開発</h3>
+                <p>完全14ステップフロー<br>Mermaidダイアグラム<br>API統合・Git Push</p>
+            </div>
+        </div>
+
+        <div class="cta-buttons">
+            <a href="./chat/" class="btn btn-primary">💬 AIチャットを開始</a>
+            <a href="https://github.com/bpmbox/AUTOCREATE/wiki" class="btn" target="_blank">📖 Wiki知識ベース</a>
+            <a href="https://github.com/bpmbox/AUTOCREATE" class="btn" target="_blank">⭐ GitHubリポジトリ</a>
+        </div>
+
+        <div class="footer">
+            <p>🎯 質問 → Wiki学習 → AI回答 → ナレッジ蓄積 → 記憶復元 → より良い回答</p>
+            <p>継続的AI成長サイクルで、どんどん賢くなるシステム</p>
+        </div>
+    </div>
+</body>
+</html>

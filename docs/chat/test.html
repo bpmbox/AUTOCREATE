@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React アプリケーション テスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen p-8">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-800 mb-8">
+                🚀 React アプリケーション テスト (HTML版)
+            </h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 左カラム - システム情報 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">
+                        システム情報
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">状態:</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
+                                正常動作中
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">バージョン:</span>
+                            <span class="text-gray-800">v1.0.0</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">フレームワーク:</span>
+                            <span class="text-gray-800">React + Vite</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右カラム - チャット -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">
+                        💬 チャット機能
+                    </h2>
+                    
+                    <!-- メッセージ表示エリア -->
+                    <div class="h-64 bg-gray-50 rounded border p-4 mb-4 overflow-y-auto">
+                        <div class="space-y-3">
+                            <div class="flex items-start space-x-2">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">
+                                    U
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-sm">
+                                    <p class="text-sm text-gray-800">
+                                        こんにちは！テストメッセージです。
+                                    </p>
+                                    <span class="text-xs text-gray-500">2025/06/24 04:18</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start space-x-2 justify-end">
+                                <div class="bg-blue-500 text-white p-3 rounded-lg shadow-sm max-w-xs">
+                                    <p class="text-sm">
+                                        システムが正常に動作しています！
+                                    </p>
+                                    <span class="text-xs opacity-75">2025/06/24 04:18</span>
+                                </div>
+                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm">
+                                    AI
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-2">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">
+                                    U
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-sm">
+                                    <p class="text-sm text-gray-800">
+                                        Reactアプリケーションの表示テスト中です。
+                                    </p>
+                                    <span class="text-xs text-gray-500">2025/06/24 04:19</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 入力エリア -->
+                    <div class="flex space-x-2">
+                        <input 
+                            type="text" 
+                            placeholder="メッセージを入力..." 
+                            class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                            送信
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                <div class="inline-flex items-center space-x-2 text-green-600">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="font-medium">React アプリケーション表示テスト</span>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <a href="/main" class="inline-block bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+                    メインアプリケーションに移動
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

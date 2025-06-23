@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI チャットシステム - 直接テスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen">
+        <!-- ヘッダー -->
+        <div class="bg-white shadow-sm border-b">
+            <div class="max-w-6xl mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold">🤖</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-800">AI自動システム作成システム</h1>
+                            <p class="text-sm text-gray-600">GitHub Copilot連携 - リアルタイムチャット</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">オンライン</span>
+                        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                            設定
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="max-w-6xl mx-auto p-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- 左カラム - システム状態 -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 システム状態</h2>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">サーバー:</span>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">稼働中</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Supabase:</span>
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm">接続中</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">GitHub:</span>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">認証済み</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">自動処理:</span>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">待機中</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                            <h3 class="font-medium text-blue-800 mb-2">🚀 Quick Actions</h3>
+                            <div class="space-y-2">
+                                <button class="w-full text-left px-3 py-2 text-blue-700 hover:bg-blue-100 rounded">
+                                    新しいプロジェクト作成
+                                </button>
+                                <button class="w-full text-left px-3 py-2 text-blue-700 hover:bg-blue-100 rounded">
+                                    GitHub Issue確認
+                                </button>
+                                <button class="w-full text-left px-3 py-2 text-blue-700 hover:bg-blue-100 rounded">
+                                    履歴を表示
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右カラム - チャット -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow-lg h-96 flex flex-col">
+                        <div class="p-4 border-b bg-gray-50 rounded-t-lg">
+                            <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                                💬 AI チャット
+                                <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded text-xs" id="messageCount">
+                                    3 メッセージ
+                                </span>
+                            </h2>
+                        </div>
+                        
+                        <!-- メッセージエリア -->
+                        <div class="flex-1 p-4 overflow-y-auto space-y-4" id="messagesContainer">
+                            <div class="flex justify-start">
+                                <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800">
+                                    <p class="text-sm">こんにちは！AI自動システムです</p>
+                                    <p class="text-xs mt-1 text-gray-500">16:20</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-blue-500 text-white">
+                                    <p class="text-sm">チャット機能のテストをお願いします</p>
+                                    <p class="text-xs mt-1 text-blue-100">16:21</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-start">
+                                <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800">
+                                    <p class="text-sm">はい！正常に動作しています。何でもお聞きください！</p>
+                                    <p class="text-xs mt-1 text-gray-500">16:21</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 入力エリア -->
+                        <div class="p-4 border-t">
+                            <div class="flex space-x-2">
+                                <input 
+                                    type="text" 
+                                    id="messageInput"
+                                    placeholder="メッセージを入力..." 
+                                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <button 
+                                    onclick="sendMessage()"
+                                    class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                                >
+                                    送信
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">
+                                Enter キーで送信 | GitHub Copilotが自動で応答します
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- フッター情報 -->
+            <div class="mt-6 text-center">
+                <div class="inline-flex items-center space-x-2 text-green-600">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="font-medium">HTML + JavaScript チャットシステム 正常動作中</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let messageCount = 3;
+        
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                const container = document.getElementById('messagesContainer');
+                const time = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                
+                // ユーザーメッセージを追加
+                container.innerHTML += `
+                    <div class="flex justify-end">
+                        <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-blue-500 text-white">
+                            <p class="text-sm">${message}</p>
+                            <p class="text-xs mt-1 text-blue-100">${time}</p>
+                        </div>
+                    </div>
+                `;
+                
+                messageCount++;
+                document.getElementById('messageCount').textContent = messageCount + ' メッセージ';
+                
+                input.value = '';
+                container.scrollTop = container.scrollHeight;
+                
+                // AI自動応答
+                setTimeout(() => {
+                    const aiTime = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                    container.innerHTML += `
+                        <div class="flex justify-start">
+                            <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800">
+                                <p class="text-sm">「${message}」について確認しました。GitHub Copilotが自動で処理を開始します！</p>
+                                <p class="text-xs mt-1 text-gray-500">${aiTime}</p>
+                            </div>
+                        </div>
+                    `;
+                    messageCount++;
+                    document.getElementById('messageCount').textContent = messageCount + ' メッセージ';
+                    container.scrollTop = container.scrollHeight;
+                }, 1500);
+            }
+        }
+        
+        // Enterキーでメッセージ送信
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
