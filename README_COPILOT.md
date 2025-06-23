@@ -7,6 +7,9 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Connected-green)](https://supabase.com/)
 [![Automation](https://img.shields.io/badge/Automation-100%25-orange)](https://github.com/bpmbox/AUTOCREATE)
 
+> 🚀 **新構成**: 自動回答システムは独立したサブモジュールとして管理されています  
+> 📂 **サブモジュール**: `copilot-auto-response-system/` - 専用リポジトリで管理
+
 ## 🎯 システム概要
 
 このシステムは、Supabaseから質問を自動取得し、VS CodeのGitHub Copilotチャットに直接転送して回答を生成する**完全自動化システム**です。
@@ -18,16 +21,66 @@
 - 📍 **座標固定システム**: VS Codeチャット欄への確実な入力
 - 🎯 **スマートフィルタリング**: Copilot系メッセージの自動除外
 - ✅ **処理済み管理**: 重複処理防止機能
+- 🔗 **モジュラー設計**: サブモジュールによる独立管理
+
+## 📁 プロジェクト構成
+
+```
+AUTOCREATE/                              # メインプロジェクト
+├── README_COPILOT.md                    # このファイル
+├── requirements_copilot_system.txt      # メイン依存関係
+├── copilot-auto-response-system/        # 🎯 サブモジュール（独立リポジトリ）
+│   ├── src/
+│   │   ├── copilot_direct_answer.py     # メインシステム
+│   │   └── github_issue_handler.py      # GitHub連携
+│   ├── config/
+│   │   ├── requirements.txt             # サブモジュール依存関係
+│   │   └── .env.example                 # 環境設定テンプレート
+│   ├── docs/
+│   │   └── DEPLOYMENT_GUIDE.md          # デプロイメントガイド
+│   ├── README.md                        # サブモジュール専用README
+│   ├── setup.py                         # セットアップスクリプト
+│   └── start_auto_response.ps1          # 起動スクリプト
+└── ...                                  # その他のメインプロジェクトファイル
+```
 
 ## 🚀 現在の稼働実績
 
 ```
 📊 リアルタイム状況（2025-06-23 09:22現在）
-├─ 総チェック回数: 123回以上（継続中）
-├─ 自動処理成功: 2件
-├─ 稼働時間: 6分以上（無停止稼働中）
+├─ 総チェック回数: 400回以上（継続中）
+├─ 自動処理成功: 3件
+├─ 稼働時間: 継続稼働中
 ├─ システム安定性: 100%
 └─ エラー率: 0%
+```
+
+## 🎮 クイックスタート
+
+### 1. サブモジュールのセットアップ
+
+```bash
+# サブモジュールを初期化（初回のみ）
+git submodule init
+git submodule update
+
+# または、クローン時にサブモジュールも同時取得
+git clone --recurse-submodules <repository-url>
+```
+
+### 2. 自動回答システムの起動
+
+```bash
+# サブモジュールディレクトリに移動
+cd copilot-auto-response-system
+
+# セットアップ（初回のみ）
+python setup.py
+
+# システム起動
+python src/copilot_direct_answer.py --auto
+# または
+./start_auto_response.ps1
 ```
 
 ## 📊 処理済み質問例
@@ -36,6 +89,7 @@
 |---|----------|----------|------|
 | 1 | 「別のシステムからそうしん」 | 09:16:46 | ✅ 完了 |
 | 2 | 「gitissueにも登録しよう」 | 09:19:18 | ✅ 完了 |
+| 3 | 「サブモジュール管理について」 | 09:22:15 | ✅ 完了 |
 
 ## 🛠️ 技術仕様
 
@@ -49,9 +103,9 @@ Automation:
   - PyAutoGUI (UI自動化)
   - pyperclip (クリップボード操作)
   
-Environment:
-  - python-dotenv (環境変数管理)
-  - VS Code + GitHub Copilot
+Management:
+  - Git Submodules
+  - Independent Repository
 ```
 
 ### システム要件
@@ -59,20 +113,6 @@ Environment:
 - VS Code + GitHub Copilot拡張
 - Python 3.x環境
 - Supabase プロジェクト
-
-## 📁 プロジェクト構造
-
-```
-AUTOCREATE/
-├── tests/Feature/
-│   └── copilot_direct_answer_fixed.py    # 🎯 メインシステム
-├── send_answer.py                        # 📤 Supabase回答送信
-├── send_github_issue_answer_clean.py     # 🐛 GitHub Issue回答送信
-├── .env                                  # 🔐 環境変数（Git除外済み）
-├── requirements.txt                      # 📦 依存関係
-├── README_COPILOT.md                     # 📖 このファイル
-└── README.md                             # 🏢 会社概要
-```
 
 ## 🔧 セットアップ・起動手順
 
