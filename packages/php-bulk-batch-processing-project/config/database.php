@@ -6,7 +6,7 @@
 
 return [
     'database' => [
-        'default' => 'mysql',
+        'default' => 'sqlite',
         
         'connections' => [
             'mysql' => [

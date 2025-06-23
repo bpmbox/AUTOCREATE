@@ -17,15 +17,20 @@ class BulkBatchProcessor
     private $pdo;
     private $batchSize;
     private $logFile;
-    
-    public function __construct($dsn, $username, $password, $batchSize = 1000)
+      public function __construct($dsn, $username = null, $password = null, $batchSize = 1000)
     {
         try {
-            $this->pdo = new PDO($dsn, $username, $password, [
+            $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false // メモリ効率化
-            ]);
+            ];
+            
+            // MySQLの場合のみ追加オプション
+            if (strpos($dsn, 'mysql:') === 0) {
+                $options[PDO::MYSQL_ATTR_USE_BUFFERED_QUERY] = false;
+            }
+            
+            $this->pdo = new PDO($dsn, $username, $password, $options);
             $this->batchSize = $batchSize;
             $this->logFile = 'batch_processing_' . date('Y-m-d') . '.log';
             $this->log("バッチ処理システム初期化完了");

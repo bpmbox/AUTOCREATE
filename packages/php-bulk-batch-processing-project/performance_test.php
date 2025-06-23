@@ -10,13 +10,14 @@ class PerformanceTest
 {
     private $pdo;
     private $processor;
-    
-    public function __construct($dsn, $username, $password)
+      public function __construct($dsn, $username = null, $password = null)
     {
-        $this->pdo = new PDO($dsn, $username, $password, [
+        $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-        ]);
+        ];
+        
+        $this->pdo = new PDO($dsn, $username, $password, $options);
         
         $this->processor = new BulkBatchProcessor($dsn, $username, $password);
     }

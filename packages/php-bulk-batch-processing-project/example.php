@@ -6,22 +6,16 @@
 
 require_once 'BulkBatchProcessor.php';
 
-// 環境変数から設定を読み込み（セキュア）
-$dbConfig = [
-    'host' => $_ENV['DB_HOST'] ?? 'localhost',
-    'dbname' => $_ENV['DB_NAME'] ?? 'test_db',
-    'username' => $_ENV['DB_USER'] ?? 'root',
-    'password' => $_ENV['DB_PASS'] ?? ''
-];
+// SQLite設定（テスト用）
+$dsn = "sqlite:" . __DIR__ . "/storage/database.sqlite";
+$username = null;
+$password = null;
 
-$dsn = "mysql:host={$dbConfig['host']};dbname={$dbConfig['dbname']};charset=utf8mb4";
-
-try {
-    // バッチ処理器初期化
+try {    // バッチ処理器初期化
     $processor = new BulkBatchProcessor(
         $dsn, 
-        $dbConfig['username'], 
-        $dbConfig['password'], 
+        $username, 
+        $password, 
         1000 // バッチサイズ
     );
     
