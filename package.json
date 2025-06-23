@@ -5,9 +5,12 @@
   "main": "index.js",
   "directories": {
     "test": "tests"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  },  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cd supabase-message-stream && npm run dev",
+    "build": "cd supabase-message-stream && npm run build",
+    "lint": "cd supabase-message-stream && npm run lint",
+    "preview": "cd supabase-message-stream && npm run preview"
   },
   "keywords": [],
   "author": "",
