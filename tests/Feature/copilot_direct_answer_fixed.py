@@ -247,29 +247,71 @@ class CopilotSupabaseIntegrationSystem:
    - ドキュメント生成
    - 完全動作確認
 
-5. GitHub Issue更新とリポジトリ作成:
-   GitHub CLI実行例:
-   # Issue更新（実装完了報告とGitパス含む）
-   gh issue create --repo "bpmbox/AUTOCREATE" --title "{question} - 完全実装完了" --body "# {question} - 実装完了\\n\\n## 実装内容\\n- 全機能実装完了\\n- テストコード作成完了\\n- ドキュメント作成完了\\n\\n## Gitフォルダーパス\\n\`packages/{question.lower().replace(' ', '-').replace('　', '-')}-project/\`\\n\\n## リポジトリURL\\nhttps://github.com/bpmbox/AUTOCREATE\\n\\n## 実装詳細\\n実装ファイル一覧と機能詳細をここに記載" --label "ai-automation,completed"
+5. 独立リポジトリ作成とサブモジュール化:
+   プロジェクトフォルダーを独立したリポジトリとして作成し、メインリポジトリにサブモジュールとして設定
    
-   # 新リポジトリ作成（必要に応じて）
-   gh repo create "project-name" --public
-   git push origin main   - 実装完了報告のIssue作成（Gitパス含む）
-   - 新しいリポジトリURL報告
-   - 成果物の詳細説明
+   手順:
+   ```bash
+   # 1. プロジェクトディレクトリに移動
+   cd packages/{question.lower().replace(' ', '-').replace('　', '-')}-project
+   
+   # 2. Git初期化
+   git init
+   git add .
+   git commit -m "初回コミット: {question}
+   
+   - 要求された機能の完全実装
+   - テストコード作成完了  
+   - ドキュメント作成完了
+   - 商用レベル品質保証"
+   
+   # 3. GitHub新リポジトリ作成（.envのGITHUB_TOKENを使用）
+   gh repo create "{question.lower().replace(' ', '-').replace('　', '-')}-project" --public --source=. --remote=origin --push
+   
+   # 4. メインリポジトリに戻る
+   cd ../..
+   
+   # 5. 既存ディレクトリを削除
+   git rm -r packages/{question.lower().replace(' ', '-').replace('　', '-')}-project
+   rm -rf packages/{question.lower().replace(' ', '-').replace('　', '-')}-project
+   
+   # 6. サブモジュールとして追加
+   git submodule add https://github.com/[USERNAME]/{question.lower().replace(' ', '-').replace('　', '-')}-project.git packages/{question.lower().replace(' ', '-').replace('　', '-')}-project
+   
+   # 7. サブモジュール設定をコミット
+   git add .gitmodules packages/{question.lower().replace(' ', '-').replace('　', '-')}-project
+   git commit -m "{question} - サブモジュール化完了
+   
+   - 独立リポジトリとして分離
+   - サブモジュール設定完了
+   - 再利用可能な構成"
+   
+   # 8. メインリポジトリにプッシュ
+   git push origin main
+   ```
 
-6. n8nワークフロー自動作成:
+6. GitHub Issue作成（独立リポジトリURL含む）:
+   GitHub CLI実行例:
+   ```bash
+   # 独立リポジトリのURLを取得
+   REPO_URL=$(gh repo view {question.lower().replace(' ', '-').replace('　', '-')}-project --json url --jq .url)
+   
+   # Issue作成（独立リポジトリURL含む）
+   gh issue create --repo "bpmbox/AUTOCREATE" --title "{question} - 完全実装・サブモジュール化完了" --body "# {question} - 実装・サブモジュール化完了\\n\\n## 🎯 実装概要\\n{question}の完全実装が完了し、独立したリポジトリとしてサブモジュール化しました。\\n\\n## 🚀 実装内容\\n- 要求された機能の完全実装\\n- テストコード作成完了\\n- ドキュメント作成完了\\n- 動作確認・品質保証完了\\n- エラーハンドリング実装\\n\\n## 📁 プロジェクト配置\\n### メインリポジトリ\\n- サブモジュールパス: \\\`packages/{question.lower().replace(' ', '-').replace('　', '-')}-project/\\\`\\n- メインリポジトリ: https://github.com/bpmbox/AUTOCREATE\\n\\n### 独立リポジトリ\\n- 独立リポジトリURL: \${{REPO_URL}}\\n- リポジトリ名: {question.lower().replace(' ', '-').replace('　', '-')}-project\\n\\n## 🔧 サブモジュール操作\\n### クローン時\\n\\\`\\\`\\\`bash\\\\ngit clone --recursive https://github.com/bpmbox/AUTOCREATE.git\\\\n\\\`\\\`\\\`\\n\\n### 既存プロジェクトでサブモジュール初期化\\n\\\`\\\`\\\`bash\\\\ngit submodule init\\\\ngit submodule update\\\\n\\\`\\\`\\\`\\n\\n### サブモジュール更新\\n\\\`\\\`\\\`bash\\\\ncd packages/{question.lower().replace(' ', '-').replace('　', '-')}-project\\\\ngit pull origin master\\\\ncd ../..\\\\ngit add packages/{question.lower().replace(' ', '-').replace('　', '-')}-project\\\\ngit commit -m \\\\\\\"サブモジュール更新\\\\\\\"\\\\n\\\`\\\`\\\`\\n\\n## ✅ 完了事項\\n- [x] 要求機能の完全実装\\n- [x] テストコード作成\\n- [x] ドキュメント生成\\n- [x] 独立リポジトリ作成\\n- [x] サブモジュール設定\\n- [x] 動作確認完了\\n\\n## 🎉 メリット\\n- **独立管理**: プロジェクト単独でのバージョン管理\\n- **再利用性**: 他のプロジェクトでも使用可能\\n- **メンテナンス性**: 独立した開発・更新サイクル\\n- **コラボレーション**: 専用リポジトリでの共同開発可能\\n\\n## 🔗 関連リンク\\n- メインリポジトリ: https://github.com/bpmbox/AUTOCREATE\\n- 独立リポジトリ: \${{REPO_URL}}\\n- サブモジュールパス: packages/{question.lower().replace(' ', '-').replace('　', '-')}-project/\\n\\n## 🤖 AI自動開発システム\\n- GitHub Copilot AI による完全自動実装\\n- 独立リポジトリ + サブモジュール自動化\\n- 13ステップ自動開発パイプライン実行完了" --label "ai-automation,submodule,completed"
+   ```
+
+7. n8nワークフロー自動作成:
    .envから取得する設定値:
    - N8N_API_KEY: 環境変数から自動取得
    - N8N_SERVER_URL: 環境変数から自動取得
    - N8N_BASE_URL: 環境変数から自動取得
 
-7. JIRAチケット自動作成:
+8. JIRAチケット自動作成:
    .envから取得するJIRA設定値:
    - JIRA_URL: 環境変数から自動取得
    - JIRA_PROJECT_KEY: 環境変数から自動取得
 
-8. Notionナレッジベース自動登録:
+9. Notionナレッジベース自動登録:
    .envから取得するNotion設定値:
    - NOTION_TOKEN: 環境変数から自動取得
    - NOTION_DATABASE_ID: 環境変数から自動取得
@@ -339,7 +381,7 @@ class CopilotSupabaseIntegrationSystem:
        print(f"❌ Notion ページ作成失敗: {{response.text}}")
    ```
 
-9. miiboナレッジベース自動登録:
+10. miiboナレッジベース自動登録:
    .envから取得するmiibo設定値:
    - MIIBO_API_KEY: 環境変数から自動取得
    - MIIBO_AGENT_ID: 環境変数から自動取得
@@ -382,7 +424,7 @@ class CopilotSupabaseIntegrationSystem:
        print(f"❌ miibo ナレッジ登録失敗: {{response.text}}")
    ```
 
-10. Hugging Face Space自動作成・公開:
+11. Hugging Face Space自動作成・公開:
    .envから取得するHugging Face設定値:
    - HF_TOKEN: 環境変数から自動取得作成するHugging Face Space例:
    - Space名: `{question.lower().replace(' ', '-').replace('　', '-')}-app`
@@ -468,7 +510,7 @@ class CopilotSupabaseIntegrationSystem:
    4. README.md作成・アップロード
    5. 公開URL取得・確認
 
-11. JIRA チケット自動作成:
+12. JIRA チケット自動作成:
    .envから取得するJIRA設定値:
    - JIRA_URL: 環境変数から自動取得（デフォルト: https://bpmboxes-team-oyd7xvuu.atlassian.net）
    - JIRA_PROJECT_KEY: 環境変数から自動取得（デフォルト: OPS）
@@ -518,7 +560,7 @@ class CopilotSupabaseIntegrationSystem:
        print(f"❌ JIRA チケット作成失敗: {{response.text}}")
    ```
 
-12. Supabase投稿:
+13. Supabase投稿:
    - ownerid: 'GitHub-Copilot-AI'
    - messages: 回答内容 + GitHub Issue URL + リポジトリURL + n8nワークフローURL + JIRAチケットURL + NotionページURL + miiboナレッジURL + HuggingFace SpaceURL + 実装結果詳細
    - created: 現在時刻
@@ -550,12 +592,17 @@ class CopilotSupabaseIntegrationSystem:
 - エラーハンドリング実装
 
 ## 📁 プロジェクト配置
+### メインリポジトリ（サブモジュール）
 packages/{{question.lower().replace(' ', '-').replace('　', '-')}}-project/
+
+### 独立リポジトリ
+https://github.com/[USERNAME]/{{question.lower().replace(' ', '-').replace('　', '-')}}-project
 
 ## 🔗 関連リンク・成果物
 - GitHub Issue: [作成されたIssue URL]
-- GitHub リポジトリ: https://github.com/bpmbox/AUTOCREATE
-- プロジェクトパス: packages/{{question.lower().replace(' ', '-').replace('　', '-')}}-project/
+- メインリポジトリ: https://github.com/bpmbox/AUTOCREATE
+- 独立リポジトリ: [新規作成された独立リポジトリURL]
+- サブモジュールパス: packages/{{question.lower().replace(' ', '-').replace('　', '-')}}-project/
 - JIRA チケット: [作成されたJIRA URL]  
 - Notion ナレッジ: [作成されたNotion URL]
 - miibo エージェント: [登録されたmiibo ID]
@@ -563,14 +610,15 @@ packages/{{question.lower().replace(' ', '-').replace('　', '-')}}-project/
 - n8n ワークフロー: 自動化フロー作成完了
 
 ## ✅ 完了状況
-全13ステップの完全自動開発フローが正常に実行されました。
+全14ステップの完全自動開発フローが正常に実行されました。
 
-## 🚀 最終Git Push実行
-変更をメインブランチにプッシュしています...
+## 🚀 サブモジュール化完了
+独立リポジトリ作成とサブモジュール設定が完了しました。
 
 ## 🤖 AI自動開発システム
 - GitHub Copilot AI による完全自動実装
-- 13ステップ自動開発パイプライン実行
+- 14ステップ自動開発パイプライン実行
+- 独立リポジトリ + サブモジュール自動化
 - API統合（GitHub/JIRA/Notion/miibo/HuggingFace/Supabase）完了
 ''',
        'created': datetime.now().isoformat()
@@ -584,27 +632,37 @@ packages/{{question.lower().replace(' ', '-').replace('　', '-')}}-project/
        print("❌ Supabase結果投稿失敗")
    ```
 
-13. 最終Git Push実行:
+14. 最終Git Push実行（サブモジュール含む）:
    ```bash
-   # Gitステータス確認
-   git status
-   
-   # 全変更をステージング
+   # 独立リポジトリでの最終Push
+   cd packages/{question.lower().replace(' ', '-').replace('　', '-')}-project
    git add .
+   git commit -m "{question} - 最終実装完了
    
-   # コミット（質問内容を含む）
-   git commit -m "{question} - 完全実装完了
+   - 全機能実装完了
+   - テストコード完備
+   - ドキュメント完備
+   - 品質保証完了"
+   git push origin master
+   cd ../..
+   
+   # メインリポジトリでサブモジュール設定とPush
+   git add .gitmodules packages/{question.lower().replace(' ', '-').replace('　', '-')}-project
+   git commit -m "{question} - サブモジュール化完了
 
    - プロジェクトフォルダ: packages/{question.lower().replace(' ', '-').replace('　', '-')}-project/
-   - 全ファイル実装完了
+   - 独立リポジトリ作成完了
+   - サブモジュール設定完了
    - API統合完了（GitHub/JIRA/Notion/miibo/HuggingFace/Supabase）
-   - 12ステップ自動開発フロー実行完了"
+   - 13ステップ自動開発フロー実行完了"
    
    # メインブランチにプッシュ
    git push origin main
    
-   echo "✅ Git Push完了: https://github.com/bpmbox/AUTOCREATE"
-   echo "📁 プロジェクトパス: packages/{question.lower().replace(' ', '-').replace('　', '-')}-project/"
+   echo "✅ Git Push完了:"
+   echo "- メインリポジトリ: https://github.com/bpmbox/AUTOCREATE"
+   echo "- 独立リポジトリ: [新規作成されたURL]"
+   echo "📁 サブモジュールパス: packages/{question.lower().replace(' ', '-').replace('　', '-')}-project/"
    ```
 
 重要な実行ガイド:
@@ -620,7 +678,7 @@ packages/{{question.lower().replace(' ', '-').replace('　', '-')}}-project/
 - Gitフォルダーパス: packages/{question.lower().replace(' ', '-').replace('　', '-')}-project/ を必ずIssueに記載
 - 最終Push: 全実装完了後に git add . && git commit && git push origin main を実行
 
-このシステムは完全自動開発パイプライン + 実際のAPI統合（GitHub + JIRA + Notion + miibo + Hugging Face + Supabase + Git Push）です。全13ステップを実行し、実際にAPIを呼び出してデータを登録し、最後にGitリポジトリにプッシュしてください！"""
+このシステムは完全自動開発パイプライン + 実際のAPI統合（GitHub + JIRA + Notion + miibo + Hugging Face + Supabase + Git Push + サブモジュール化）です。全14ステップを実行し、実際にAPIを呼び出してデータを登録し、独立リポジトリを作成、サブモジュール設定、最後にGitリポジトリにプッシュしてください！"""
             
             print(f"📤 Copilotチャットに質問送信中...")
             print(f"質問: {question}")
