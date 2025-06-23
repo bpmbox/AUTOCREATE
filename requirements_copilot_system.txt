@@ -1,0 +1,27 @@
+# GitHub Copilot自動回答システム依存関係
+# 🤖 AUTOCREATE Copilot System Requirements
+
+# Core Dependencies
+supabase>=2.15.3
+python-dotenv>=0.21.1
+
+# Automation & UI
+pyautogui>=0.9.54
+pyperclip>=1.8.2
+
+# HTTP & Networking
+requests>=2.31.0
+httpx>=0.26.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Development & Testing
+pytest>=7.3.1
+pytest-mock>=3.14.0
+
+# Optional: Enhanced Features
+# streamlit>=1.28.0  # For dashboard (future)
+# discord.py>=2.3.0  # For Discord bot (future)
+# slack-sdk>=3.21.0  # For Slack integration (future)
