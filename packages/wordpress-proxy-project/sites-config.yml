@@ -1,0 +1,43 @@
+# WordPress Proxy設定ファイル例
+# YAML形式で複数サイトを一括設定
+
+sites:
+  - domain: example1.com
+    backend: 192.168.1.100:8080
+    ssl: true
+    
+  - domain: example2.com
+    backend: 192.168.1.101:8080
+    ssl: true
+    
+  - domain: test.example.com
+    backend: 192.168.1.102:8080
+    ssl: false
+    
+  - domain: blog.example.com
+    backend: 192.168.1.103:8080
+    ssl: true
+
+# グローバル設定
+global:
+  webserver: nginx  # nginx または apache
+  backup_dir: /etc/proxy-backups
+  ssl_email: admin@example.com
+  
+# SSL設定
+ssl:
+  auto_renew: true
+  email: admin@example.com
+  
+# セキュリティ設定
+security:
+  headers:
+    - "X-Frame-Options: SAMEORIGIN"
+    - "X-Content-Type-Options: nosniff"
+    - "X-XSS-Protection: 1; mode=block"
+  
+# ログ設定
+logging:
+  access_log: true
+  error_log: true
+  log_rotation: daily

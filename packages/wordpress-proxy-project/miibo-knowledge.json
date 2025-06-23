@@ -1,0 +1,81 @@
+{
+  "title": "WordPress proxyで呼び出しの設定シェル",
+  "content": "WordPress proxy設定を自動化するシェルスクリプト。Nginx/Apache両対応でSSL証明書の自動設定も可能。\n\n## 主要機能\n- リバースプロキシ設定の自動生成\n- SSL証明書の自動取得・設定（Let's Encrypt対応）\n- 複数WordPressサイトの一括管理\n- ドメイン設定の自動化\n- 設定ファイルの自動バックアップ・復元\n\n## 使用方法\n```bash\n# 基本的な設定\n./wordpress-proxy-setup.sh --domain example.com --backend 192.168.1.100:8080\n\n# SSL証明書付きで設定\n./wordpress-proxy-setup.sh --domain example.com --backend 192.168.1.100:8080 --ssl\n\n# 複数サイトの一括設定\n./wordpress-proxy-setup.sh --config sites-config.yml\n```\n\n## 対応環境\n- Ubuntu 20.04/22.04\n- CentOS 7/8\n- Nginx 1.18+\n- Apache 2.4+\n\nプロジェクトファイルは packages/wordpress-proxy-project に配置されています。",
+  "category": "wordpress-infrastructure",
+  "tags": ["wordpress", "proxy", "nginx", "apache", "ssl", "automation", "shell-script"],
+  "knowledge_type": "implementation",
+  "difficulty": "intermediate",
+  "estimated_time": "30分",
+  "prerequisites": ["Linux基礎知識", "Nginx/Apache設定経験", "SSL証明書の基礎知識"],
+  "related_topics": ["reverse-proxy", "ssl-certificates", "wordpress-hosting", "server-automation"],
+  "files": [
+    {
+      "name": "wordpress-proxy-setup.sh",
+      "description": "メインのプロキシ設定スクリプト",
+      "type": "shell-script"
+    },
+    {
+      "name": "install.sh",
+      "description": "システムへのインストールスクリプト",
+      "type": "shell-script"
+    },
+    {
+      "name": "test.sh",
+      "description": "機能テスト用スクリプト",
+      "type": "shell-script"
+    },
+    {
+      "name": "sites-config.yml",
+      "description": "複数サイト設定用のYAMLファイル",
+      "type": "configuration"
+    },
+    {
+      "name": "n8n-workflow.json",
+      "description": "n8n自動化ワークフロー定義",
+      "type": "workflow"
+    }
+  ],
+  "use_cases": [
+    {
+      "title": "単一WordPressサイトのプロキシ設定",
+      "description": "1つのWordPressサイトに対してリバースプロキシを設定し、SSL証明書も同時に取得する場合",
+      "command": "./wordpress-proxy-setup.sh --domain example.com --backend 192.168.1.100:8080 --ssl"
+    },
+    {
+      "title": "複数WordPressサイトの一括設定",
+      "description": "複数のWordPressサイトをYAML設定ファイルから一括でプロキシ設定する場合",
+      "command": "./wordpress-proxy-setup.sh --config sites-config.yml"
+    },
+    {
+      "title": "Apache環境でのプロキシ設定",
+      "description": "Apacheを使用している環境でWordPressサイトのプロキシ設定を行う場合",
+      "command": "./wordpress-proxy-setup.sh --domain example.com --backend 192.168.1.100:8080 --webserver apache --ssl"
+    }
+  ],
+  "troubleshooting": [
+    {
+      "problem": "SSL証明書の取得に失敗する",
+      "solution": "DNS設定を確認し、ドメインが正しく解決されることを確認してください。また、ファイアウォールで80番・443番ポートが開放されていることを確認してください。"
+    },
+    {
+      "problem": "プロキシ接続がうまくいかない",
+      "solution": "バックエンドサーバーが正常に動作していることを確認し、指定したIPアドレス・ポート番号が正確であることを確認してください。"
+    },
+    {
+      "problem": "設定ファイルの構文エラー",
+      "solution": "nginx -t または apache2ctl configtest コマンドで設定ファイルの構文をチェックし、エラーがある場合はバックアップから復元してください。"
+    }
+  ],
+  "security_considerations": [
+    "SSL証明書の定期的な更新確認",
+    "プロキシヘッダーのセキュリティ設定",
+    "バックエンドサーバーへのアクセス制限",
+    "ログファイルの適切な管理"
+  ],
+  "performance_tips": [
+    "プロキシバッファリングの最適化",
+    "静的ファイルのキャッシュ設定",
+    "接続タイムアウトの調整",
+    "ログローテーションの設定"
+  ]
+}

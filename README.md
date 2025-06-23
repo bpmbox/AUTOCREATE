@@ -470,7 +470,51 @@ GROQ_API_KEY=gsk_your_groq_api_key_here
 OPENINTERPRETER_PASSWORD=your_secure_password_here
 ```
 
-### 3. アプリケーション起動
+## ⚙️ セットアップと環境変数設定
+
+### 🔧 必要な環境変数設定
+
+本システムの自動開発パイプライン（13ステップ）を実行するには、以下の環境変数が必要です：
+
+```bash
+# 1. .env.exampleファイルをコピー
+cp .env.example .env
+
+# 2. 以下の環境変数を設定（必須）
+```
+
+#### 📋 必須環境変数一覧
+
+| 変数名 | 説明 | 取得方法 |
+|--------|------|----------|
+| `GITHUB_TOKEN` | GitHub Issues作成・更新 | GitHub Settings > Developer settings > Personal access tokens |
+| `N8N_API_KEY` | n8nワークフロー自動化 | n8n管理画面 > API Keys |
+| `N8N_SERVER_URL` | n8nサーバーURL | 自分のn8nインスタンスURL |
+| `JIRA_API_TOKEN` | JIRAチケット管理 | JIRA > Profile > Security > API tokens |
+| `NOTION_TOKEN` | Notionナレッジ管理 | Notion > Integrations > New integration |
+| `NOTION_DATABASE_ID` | Notionデータベース | Notion URLから取得 |
+| `MIIBO_API_KEY` | miiboエージェント | miibo管理画面 |
+| `HF_TOKEN` | Hugging Face Spaces | Hugging Face > Settings > Access Tokens |
+| `SUPABASE_URL` | データベース接続 | Supabaseプロジェクト設定 |
+| `SUPABASE_KEY` | データベースアクセス | Supabaseプロジェクト設定 |
+
+#### ⚠️ セキュリティ注意事項
+
+- **絶対に `.env` ファイルをGitにコミットしないでください**
+- すべてのAPIキーは環境変数経由でのみ使用されます
+- 本システムはハードコードされたAPIキーを含みません
+
+#### 🚀 システム起動方法
+
+```bash
+# 1. 環境変数設定後、自動システム起動
+python tests/Feature/copilot_direct_answer_fixed.py --auto
+
+# 2. Supabaseで新しい質問を監視開始
+# システムが自動的に13ステップパイプラインを実行します
+```
+
+## 3. アプリケーション起動
 
 **通常モード**:
 ```bash

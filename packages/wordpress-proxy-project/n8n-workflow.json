@@ -1,0 +1,431 @@
+{
+  "name": "WordPress Proxy自動設定ワークフロー",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wordpress-proxy-setup",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - プロキシ設定要求",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "wordpress-proxy-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.domain }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "leftValue": "={{ $json.backend }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "validation",
+      "name": "入力検証",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /opt/wordpress-proxy && ./wordpress-proxy-setup.sh --domain {{ $json.domain }} --backend {{ $json.backend }} {{ $json.ssl ? '--ssl' : '' }}",
+        "options": {}
+      },
+      "id": "execute-script",
+      "name": "プロキシ設定実行",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "resource": "issue",
+        "operation": "create",
+        "owner": "bpmbox",
+        "repository": "AUTOCREATE",
+        "title": "WordPress Proxy設定完了: {{ $json.domain }}",
+        "body": "## プロキシ設定完了\n\n**ドメイン**: {{ $json.domain }}\n**バックエンド**: {{ $json.backend }}\n**SSL**: {{ $json.ssl ? '有効' : '無効' }}\n\n設定が正常に完了しました。",
+        "labels": [
+          "automation",
+          "wordpress-proxy"
+        ]
+      },
+      "id": "create-github-issue",
+      "name": "GitHub Issue作成",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "project": "WORDPRESS-PROXY",
+        "issueType": "Task",
+        "summary": "WordPress Proxy設定: {{ $json.domain }}",
+        "description": "ドメイン: {{ $json.domain }}\nバックエンド: {{ $json.backend }}\nSSL: {{ $json.ssl ? '有効' : '無効' }}\n\n自動設定が完了しました。",
+        "priority": "Medium",
+        "labels": ["automation", "wordpress"]
+      },
+      "id": "create-jira-ticket",
+      "name": "JIRA チケット作成",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "operation": "create",
+        "databaseId": "{{ $env.NOTION_DATABASE_ID }}",
+        "title": "WordPress Proxy: {{ $json.domain }}",
+        "properties": {
+          "Domain": {
+            "type": "title",
+            "title": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "{{ $json.domain }}"
+                }
+              }
+            ]
+          },
+          "Backend": {
+            "type": "rich_text",
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "{{ $json.backend }}"
+                }
+              }
+            ]
+          },
+          "SSL": {
+            "type": "checkbox",
+            "checkbox": "{{ $json.ssl }}"
+          },
+          "Status": {
+            "type": "select",
+            "select": {
+              "name": "設定完了"
+            }
+          },
+          "Date": {
+            "type": "date",
+            "date": {
+              "start": "{{ $now.format('YYYY-MM-DD') }}"
+            }
+          }
+        }
+      },
+      "id": "create-notion-page",
+      "name": "Notion ページ作成",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.MIIBO_API_URL }}/knowledge",
+        "authentication": "headerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.MIIBO_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "WordPress Proxy設定: {{ $json.domain }}"
+            },
+            {
+              "name": "content",
+              "value": "ドメイン: {{ $json.domain }}\\nバックエンド: {{ $json.backend }}\\nSSL: {{ $json.ssl ? '有効' : '無効' }}\\n\\nWordPressサイトのプロキシ設定が完了しました。"
+            },
+            {
+              "name": "category",
+              "value": "wordpress-proxy"
+            },
+            {
+              "name": "tags",
+              "value": ["wordpress", "proxy", "automation"]
+            }
+          ]
+        }
+      },
+      "id": "register-miibo",
+      "name": "miibo ナレッジ登録",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1450, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.SUPABASE_URL }}/rest/v1/ai_responses",
+        "authentication": "headerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "{{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "question",
+              "value": "WordPress proxyで呼び出しの設定シェル"
+            },
+            {
+              "name": "answer",
+              "value": "WordPress Proxy設定が完了しました。\\n\\nドメイン: {{ $json.domain }}\\nバックエンド: {{ $json.backend }}\\nSSL: {{ $json.ssl ? '有効' : '無効' }}\\n\\n設定ファイルとスクリプトは packages/wordpress-proxy-project に配置されています。"
+            },
+            {
+              "name": "status",
+              "value": "completed"
+            },
+            {
+              "name": "project_path",
+              "value": "packages/wordpress-proxy-project"
+            }
+          ]
+        }
+      },
+      "id": "update-supabase",
+      "name": "Supabase 結果更新",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1650, 200]
+    },
+    {
+      "parameters": {
+        "message": "WordPress Proxy設定エラーが発生しました。\\n\\nドメイン: {{ $json.domain }}\\nエラー: {{ $node['プロキシ設定実行'].json.error }}"
+      },
+      "id": "error-notification",
+      "name": "エラー通知",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "wordpress-proxy-status",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "status-webhook",
+      "name": "Webhook - ステータス確認",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 600],
+      "webhookId": "wordpress-proxy-status"
+    },
+    {
+      "parameters": {
+        "command": "cd /opt/wordpress-proxy && ./test.sh",
+        "options": {}
+      },
+      "id": "run-tests",
+      "name": "テスト実行",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [450, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { 'status': 'success', 'test_results': $node['テスト実行'].json, 'timestamp': $now } }}"
+      },
+      "id": "test-response",
+      "name": "テスト結果レスポンス",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [650, 600]
+    }
+  ],
+  "connections": {
+    "Webhook - プロキシ設定要求": {
+      "main": [
+        [
+          {
+            "node": "入力検証",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "入力検証": {
+      "main": [
+        [
+          {
+            "node": "プロキシ設定実行",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "エラー通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "プロキシ設定実行": {
+      "main": [
+        [
+          {
+            "node": "GitHub Issue作成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Issue作成": {
+      "main": [
+        [
+          {
+            "node": "JIRA チケット作成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JIRA チケット作成": {
+      "main": [
+        [
+          {
+            "node": "Notion ページ作成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion ページ作成": {
+      "main": [
+        [
+          {
+            "node": "miibo ナレッジ登録",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "miibo ナレッジ登録": {
+      "main": [
+        [
+          {
+            "node": "Supabase 結果更新",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - ステータス確認": {
+      "main": [
+        [
+          {
+            "node": "テスト実行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "テスト実行": {
+      "main": [
+        [
+          {
+            "node": "テスト結果レスポンス",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "wordpress-proxy-automation",
+  "tags": [
+    {
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z",
+      "id": "wordpress",
+      "name": "wordpress"
+    },
+    {
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z",
+      "id": "proxy",
+      "name": "proxy"
+    },
+    {
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z",
+      "id": "automation",
+      "name": "automation"
+    }
+  ]
+}
