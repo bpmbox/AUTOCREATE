@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">./tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory suffix="Test.php">./tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">./app</directory>
+        </include>
+    </coverage>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        
+        <!-- 🧪 テスト専用設定 -->
+        <env name="LINE_CHANNEL_ID" value="test_channel_id"/>
+        <env name="LINE_CHANNEL_SECRET" value="test_channel_secret"/>
+        <env name="LINE_CALLBACK_URL" value="http://localhost:8080/auth/line/callback"/>
+        
+        <!-- 🗄️ Supabase Test Database -->
+        <env name="SUPABASE_URL" value="https://your-test-project.supabase.co"/>
+        <env name="SUPABASE_KEY" value="your_test_supabase_key"/>
+    </php>
+</phpunit>
