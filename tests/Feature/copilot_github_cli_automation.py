@@ -989,19 +989,19 @@ graph LR
             print("📤 Git Push実行中...")
             
             # 1. git add .
-            add_result = subprocess.run(['git', 'add', '.'], capture_output=True, text=True, timeout=30)
+            add_result = subprocess.run(['git', 'add', '.'], capture_output=True, text=True, timeout=30, encoding='utf-8', errors='ignore')
             if add_result.returncode != 0:
                 print(f"⚠️ git add 失敗: {add_result.stderr}")
                 return False
             
             # 2. git commit
             commit_msg = f"🔄 自動開発実行前の作業保存 - {question[:50]}"
-            commit_result = subprocess.run(['git', 'commit', '-m', commit_msg], capture_output=True, text=True, timeout=30)
+            commit_result = subprocess.run(['git', 'commit', '-m', commit_msg], capture_output=True, text=True, timeout=30, encoding='utf-8', errors='ignore')
             if commit_result.returncode != 0:
                 print(f"💡 コミット対象なし（変更なし）")
             
             # 3. git push
-            push_result = subprocess.run(['git', 'push'], capture_output=True, text=True, timeout=60)
+            push_result = subprocess.run(['git', 'push'], capture_output=True, text=True, timeout=60, encoding='utf-8', errors='ignore')
             if push_result.returncode == 0:
                 print("✅ Git Push完了")
                 return True
@@ -1088,7 +1088,7 @@ git checkout -b "feature/implementation-{timestamp}"
                     '--repo', 'bpmbox/AUTOCREATE',
                     '--title', f'🎯 {question} - AI実装要求',
                     '--body-file', temp_file,
-                    '--label', 'ai-automation,implementation,ready-for-ai'
+                    '--label', 'ai-automation'
                 ]
                 
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
