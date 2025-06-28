@@ -1,0 +1,54 @@
+graph TB
+    START[🚀 機械学習を使った画像認識システムを作って... 開発開始] --> SAVE[1️⃣ 作業保存・Push]
+    SAVE --> NEWREPO[2️⃣ 新リポジトリ作成]
+    NEWREPO --> SUBMOD[📦 サブモジュール追加]
+    SUBMOD --> BRANCH[🌿 featureブランチ作成]
+    BRANCH --> ANSWER[3️⃣ 詳細回答生成]
+    ANSWER --> ISSUE[4️⃣ GitHub Issue作成]
+    ISSUE --> FOLDER[5️⃣ プロジェクトフォルダ作成]
+    FOLDER --> IMPLEMENT[6️⃣ プログラム実装]
+    IMPLEMENT --> TEST[🧪 テスト実行]
+    TEST --> COMMIT[7️⃣ Git操作・コミット]
+    COMMIT --> REPORT[8️⃣ 完了報告Issue]
+    REPORT --> SUPABASE[9️⃣ Supabase投稿]
+    SUPABASE --> END[✅ 完了]
+    
+    SAVE --> S1[git add .]
+    SAVE --> S2[git commit]
+    SAVE --> S3[git push]
+    
+    NEWREPO --> N1[.envトークン使用]
+    NEWREPO --> N2[gh repo create]
+    NEWREPO --> N3[--private --clone]
+    
+    SUBMOD --> SM1[git submodule add]
+    SUBMOD --> SM2[projects/機械学習を使った画像認識システムを作ってください]
+    SUBMOD --> SM3[メイン汚染回避]
+    
+    BRANCH --> B1[feature/implementation]
+    BRANCH --> B2[20250628-183523]
+    BRANCH --> B3[分離環境]
+    
+    IMPLEMENT --> I1[ソースコード]
+    IMPLEMENT --> I2[テスト]
+    IMPLEMENT --> I3[ドキュメント]
+    
+    TEST --> T1[単体テスト]
+    TEST --> T2[統合テスト]
+    TEST --> T3[動作確認]
+    
+    COMMIT --> C1[サブモジュール内]
+    COMMIT --> C2[メイン参照更新]
+    COMMIT --> C3[完全分離管理]
+    
+    style START fill:#e3f2fd
+    style SAVE fill:#fff3e0
+    style NEWREPO fill:#f3e5f5
+    style SUBMOD fill:#e8f5e8
+    style BRANCH fill:#fff8e1
+    style IMPLEMENT fill:#e8f5e8
+    style TEST fill:#fff3e0
+    style END fill:#f1f8e9
+    style N1 fill:#ffebee
+    style SM1 fill:#e8f5e8
+    style C1 fill:#e3f2fd

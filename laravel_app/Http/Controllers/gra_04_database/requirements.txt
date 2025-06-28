@@ -1,2 +1,0 @@
-gradio
-psycopg2-binary
