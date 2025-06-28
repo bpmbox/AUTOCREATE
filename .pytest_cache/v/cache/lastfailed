@@ -1,0 +1,9 @@
+{
+  "tests/unit/test_automation_core.py::TestGitHubCopilotAutomation::test_safe_filename_generation": true,
+  "tests/unit/test_automation_core.py::TestGitHubCopilotAutomation::test_prompt_generation": true,
+  "tests/unit/test_automation_core.py::TestGitHubCopilotAutomation::test_filename_sanitization": true,
+  "tests/unit/test_automation_core.py::TestGitHubCopilotAutomation::test_issue_title_generation": true,
+  "tests/unit/test_automation_core.py::TestUtilityFunctions::test_timestamp_generation": true,
+  "tests/unit/test_automation_core.py::TestUtilityFunctions::test_project_name_generation": true,
+  "test_fastapi_supabase_integration.py::TestSupabaseIntegration::test_04_insert_test_question": true
+}
