@@ -864,7 +864,7 @@ graph LR
                 '--clone'
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
             
             if result.returncode == 0:
                 print(f"✅ リポジトリ作成成功: https://github.com/{github_username}/{repo_name}")
@@ -894,7 +894,7 @@ graph LR
             
             # サブモジュール追加コマンド
             cmd = ['git', 'submodule', 'add', repo_url, submodule_path]
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
             
             if result.returncode == 0:
                 print(f"✅ サブモジュール追加成功: {submodule_path}")
@@ -1091,7 +1091,7 @@ git checkout -b "feature/implementation-{timestamp}"
                     '--label', 'ai-automation'
                 ]
                 
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, encoding='utf-8')
                 
                 if result.returncode == 0:
                     issue_url = result.stdout.strip()
@@ -1112,11 +1112,347 @@ git checkout -b "feature/implementation-{timestamp}"
             print(f"❌ Issue作成エラー: {e}")
             return None
 
+    def list_and_select_issues(self):
+        """GitHub Issue一覧を表示して選択する"""
+        try:
+            print("📋 GitHub Issue一覧を取得中...")
+            
+            # GitHub CLI でIssue一覧取得
+            cmd = ['gh', 'issue', 'list', '--repo', 'bpmbox/AUTOCREATE', '--limit', '20', '--state', 'open']
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, encoding='utf-8')
+            
+            if result.returncode != 0:
+                print(f"❌ Issue一覧取得失敗: {result.stderr}")
+                return None
+            
+            # Issue一覧を解析
+            issues = []
+            lines = result.stdout.strip().split('\n')
+            
+            if not lines or lines[0] == '':
+                print("📝 オープンなIssueがありません")
+                return None
+            
+            print("\n📋 オープンなGitHub Issues:")
+            print("="*80)
+            
+            for i, line in enumerate(lines, 1):
+                if line.strip():
+                    # GitHub CLIの出力形式を解析 (例: "123\tIssue Title\tLABELS")
+                    parts = line.split('\t')
+                    if len(parts) >= 2:
+                        issue_number = parts[0]
+                        issue_title = parts[1]
+                        labels = parts[2] if len(parts) > 2 else ""
+                        
+                        issues.append({
+                            'number': issue_number,
+                            'title': issue_title,
+                            'labels': labels
+                        })
+                        
+                        print(f"{i:2d}. #{issue_number} - {issue_title}")
+                        if labels:
+                            print(f"    🏷️ Labels: {labels}")
+                        print("-" * 60)
+            
+            if not issues:
+                print("📝 解析可能なIssueがありません")
+                return None
+            
+            # Issue選択
+            print(f"\n🎯 解決したいIssue番号を選択してください (1-{len(issues)}):")
+            try:
+                choice = int(input("選択 (番号): "))
+                if 1 <= choice <= len(issues):
+                    selected_issue = issues[choice - 1]
+                    print(f"✅ 選択されたIssue: #{selected_issue['number']} - {selected_issue['title']}")
+                    return selected_issue
+                else:
+                    print("❌ 無効な番号です")
+                    return None
+            except ValueError:
+                print("❌ 数値を入力してください")
+                return None
+                
+        except Exception as e:
+            print(f"❌ Issue一覧取得エラー: {e}")
+            return None
+
+    def get_issue_details(self, issue_number):
+        """指定されたIssueの詳細を取得"""
+        try:
+            print(f"📖 Issue #{issue_number} の詳細を取得中...")
+            
+            cmd = ['gh', 'issue', 'view', issue_number, '--repo', 'bpmbox/AUTOCREATE']
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, encoding='utf-8')
+            
+            if result.returncode == 0:
+                return result.stdout
+            else:
+                print(f"❌ Issue詳細取得失敗: {result.stderr}")
+                return None
+                
+        except Exception as e:
+            print(f"❌ Issue詳細取得エラー: {e}")
+            return None
+
+    def send_issue_to_chat_for_resolution(self, issue):
+        """選択されたIssueをVS Codeチャットに送信してGitHub Copilotに解決を依頼"""
+        if not self.chat_coordinates:
+            print("❌ チャット座標が未設定")
+            return False
+        
+        try:
+            issue_number = issue['number']
+            issue_title = issue['title']
+            
+            # Issue詳細を取得
+            issue_details = self.get_issue_details(issue_number)
+            if not issue_details:
+                print("❌ Issue詳細が取得できませんでした")
+                return False
+            
+            # GitHub Copilot向けの解決依頼プロンプト
+            resolution_prompt = f"""🔧 GitHub Issue解決依頼
+
+📋 **Issue情報**:
+- Issue番号: #{issue_number}
+- タイトル: {issue_title}
+- リポジトリ: bpmbox/AUTOCREATE
+
+📖 **Issue詳細**:
+```
+{issue_details}
+```
+
+🚀 **GitHub Copilot完全自動解決フロー実行をお願いします**：
+
+1️⃣ **Issue内容分析**: 
+   - 要求内容を詳細に理解
+   - 実装すべき機能・修正すべき問題を特定
+   - 必要な技術スタック・アプローチを決定
+
+2️⃣ **環境準備・作業開始**: 
+   📋 現在の作業を安全に保存:
+   ```bash
+   git add .
+   git commit -m "🔧 Issue #{issue_number} 解決開始前の作業保存"
+   git push
+   ```
+
+3️⃣ **実装・修正実行**:
+   - Issue要求に従って完全実装
+   - テストコード作成・実行
+   - ドキュメント更新
+   - 動作確認・品質チェック
+
+4️⃣ **Git操作・コミット**:
+   ```bash
+   git add .
+   git commit -m "✅ Fix #{issue_number}: {issue_title}"
+   git push
+   ```
+
+5️⃣ **Issue進捗報告**:
+   📋 同じIssueにコメントで進捗・完了報告:
+   ```bash
+   gh issue comment #{issue_number} --repo "bpmbox/AUTOCREATE" --body "## 🎉 実装完了報告
+
+### ✅ 完了内容
+- Issue #{issue_number} の要求に従って完全実装
+- テスト実行・動作確認完了
+- コード品質チェック完了
+
+### 📝 実装詳細
+[実装した内容の詳細をここに記載]
+
+### 🚀 確認方法
+[動作確認手順をここに記載]
+
+### 📁 関連ファイル
+[作成・修正したファイル一覧]
+
+**実装完了時刻**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**解決システム**: GitHub Copilot完全自動化
+
+---
+🎯 **Issue解決完了** - Close準備完了"
+   ```
+
+6️⃣ **Issue完了処理**:
+   📋 GitHub CLIでIssue完了:
+   ```bash
+   gh issue close #{issue_number} --repo "bpmbox/AUTOCREATE" --comment "✅ 実装完了・Issue解決済み
+
+## 🏁 最終確認
+- [x] 機能実装完了
+- [x] テスト実行完了  
+- [x] ドキュメント更新完了
+- [x] Git コミット・プッシュ完了
+
+**Issue #{issue_number} を正常に解決・完了しました。**
+
+**完了時刻**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+   ```
+
+🔥 **重要なガイド**:
+- 🎯 同一Issue内で完結: 新しいIssueは作成せず、同じIssue内でコメント返信
+- 📝 進捗の可視化: 実装過程を段階的にコメントで報告
+- 🔄 スレッド管理: 1つのIssueで「要求→実装→完了」の流れを維持
+- ✅ 明確な完了: 最終コメント後にIssue Close
+- 📊 トレーサビリティ: 全過程が1つのIssueで追跡可能
+
+🤖 **Issue #{issue_number} の同一スレッド内での完全自動解決を開始してください！**"""
+            
+            print(f"📤 Issue #{issue_number} をCopilotチャットに送信中...")
+            print(f"🎯 Issue: {issue_title}")
+            
+            x, y = self.chat_coordinates['x'], self.chat_coordinates['y']
+            
+            # チャット欄クリック
+            for i in range(3):
+                pyautogui.click(x, y)
+                time.sleep(0.3)
+            
+            # 内容クリア
+            pyautogui.hotkey('ctrl', 'a')
+            time.sleep(0.2)
+            pyautogui.press('delete')
+            time.sleep(0.3)
+            
+            # クリップボード経由で入力
+            pyperclip.copy(resolution_prompt)
+            time.sleep(0.3)
+            pyautogui.hotkey('ctrl', 'v')
+            time.sleep(1.5)
+            
+            print("📝 Issue解決依頼入力完了")
+            
+            # 自動送信
+            print("🚀 Copilotに送信中...")
+            pyautogui.press('enter')
+            time.sleep(3)
+            
+            print("✅ Issue解決依頼送信完了")
+            print("💡 GitHub Copilotが完全自動Issue解決フローを実行中...")
+            print("🔧 Issue分析 → 実装 → テスト → コミット → Issue内コメント返信")
+            print(f"\n🎯 次はGitHub CopilotがIssue #{issue_number} を自動解決します:")
+            print("  1️⃣ Issue要求分析")
+            print("  2️⃣ 完全実装・修正")
+            print("  3️⃣ テスト・動作確認")
+            print("  4️⃣ Git コミット・プッシュ")
+            print("  5️⃣ 同一Issue内に進捗コメント")
+            print("  6️⃣ Issue完了・Close")
+            
+            return True
+                
+        except Exception as e:
+            print(f"❌ Issue解決依頼送信エラー: {e}")
+            return False
+
+    def close_issue_with_comment(self, issue_number, comment="✅ 自動解決完了"):
+        """指定されたIssueを完了コメント付きでCloseする"""
+        try:
+            print(f"🎯 Issue #{issue_number} をCloseします...")
+            
+            cmd = [
+                'gh', 'issue', 'close', str(issue_number),
+                '--repo', 'bpmbox/AUTOCREATE',
+                '--comment', f"{comment}\n\n**自動完了時刻**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n**解決システム**: GitHub Copilot完全自動化"
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, encoding='utf-8')
+            
+            if result.returncode == 0:
+                print(f"✅ Issue #{issue_number} が正常にCloseされました")
+                return True
+            else:
+                print(f"❌ Issue Close失敗: {result.stderr}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Issue Close エラー: {e}")
+            return False
+
+    def issue_resolution_mode(self):
+        """Issue解決モード: Issue選択 → チャット送信 → 自動解決"""
+        print("🔧 Issue解決モード開始")
+        print("📋 GitHub Issue → VS Code Chat → 自動解決 → Complete")
+        print("="*60)
+        
+        # 1. Issue一覧表示・選択
+        selected_issue = self.list_and_select_issues()
+        if not selected_issue:
+            print("❌ Issue選択がキャンセルされました")
+            return False
+        
+        # 2. 確認
+        print(f"\n🎯 解決対象Issue:")
+        print(f"   #{selected_issue['number']} - {selected_issue['title']}")
+        confirm = input("\n実行しますか？ (y/N): ").lower()
+        
+        if confirm != 'y':
+            print("❌ キャンセルされました")
+            return False
+        
+        # 3. Issue解決依頼をチャットに送信
+        success = self.send_issue_to_chat_for_resolution(selected_issue)
+        
+        if success:
+            print(f"\n✅ Issue #{selected_issue['number']} の解決依頼を送信完了!")
+            print("🤖 GitHub Copilotが自動解決を開始します")
+            print("\n💡 GitHub Copilotが完了したら、以下のコマンドでIssueをCloseできます:")
+            print(f"   選択肢 8 または直接実行: Issue #{selected_issue['number']} Close")
+            
+            # オプション: 自動監視モードの提案
+            auto_monitor = input("\n🔄 自動監視モードを開始しますか？ (Y/n): ").lower()
+            if auto_monitor != 'n':
+                self.monitor_issue_resolution(selected_issue['number'])
+                
+            return True
+        else:
+            print("❌ Issue解決依頼送信失敗")
+            return False
+
+    def monitor_issue_resolution(self, issue_number, check_interval=30):
+        """Issue解決の監視（オプション機能）"""
+        print(f"🔍 Issue #{issue_number} 解決監視開始")
+        print(f"⚡ {check_interval}秒間隔でチェック")
+        print("🛑 Ctrl+C で停止")
+        
+        try:
+            while True:
+                # 何らかの完了条件をチェック（例：特定のコミット、ファイル変更等）
+                # この例では手動確認
+                print(f"🔍 監視中... 時刻: {datetime.now().strftime('%H:%M:%S')}")
+                
+                # 手動確認プロンプト
+                user_input = input("解決完了しましたか？ (y/N/s=stop): ").lower()
+                
+                if user_input == 'y':
+                    print("🎯 解決完了が確認されました")
+                    success = self.close_issue_with_comment(issue_number, "✅ GitHub Copilot自動解決完了")
+                    if success:
+                        print(f"✅ Issue #{issue_number} が正常にCompleteされました！")
+                    break
+                elif user_input == 's':
+                    print("🛑 監視を停止します")
+                    break
+                
+                time.sleep(check_interval)
+                
+        except KeyboardInterrupt:
+            print(f"\n🛑 監視停止")
+            print(f"💡 手動でIssue #{issue_number} をCloseする場合:")
+            print(f"   gh issue close {issue_number} --repo bpmbox/AUTOCREATE")
+
 if __name__ == "__main__":
-    print("🤖 GitHub Copilot自動化システム (一気実行対応版) - 開始")
+    print("🤖 GitHub Copilot自動化システム (Issue解決対応版) - 開始")
     print("🎨 動的Mermaid図生成対応")
     print("📦 サブモジュール完全分離開発対応")
     print("🚀 一気実行: チャット → Push → Issue作成 → 他AI実行待ち")
+    print("🔧 Issue解決: Issue選択 → チャット投稿 → 自動解決 → Complete")
     
     # ネットワーク接続テスト
     try:
@@ -1137,53 +1473,6 @@ if __name__ == "__main__":
     print("4. 単発Mermaid図生成テスト")
     print("5. 最新メッセージ確認（デバッグ用）")
     print("6. 単発Push+Issue作成テスト")
-    print("7. 終了")
-    
-    choice = input("選択してください (1-7): ")
-    
-    if choice == "1":
-        if automation.offline_mode:
-            print("❌ オンラインモードが必要です")
-        else:
-            print("🚀 一気実行モード: チャット検出 → 自動Push → Issue作成 → 他AI実行待ち")
-            automation.infinite_auto_loop()
-    elif choice == "2":
-        automation.local_test_mode()
-    elif choice == "3":
-        automation.test_github_cli_integration()
-    elif choice == "4":
-        # 単発テスト
-        test_question = input("テスト質問を入力してください: ") or "Pythonでデータベース管理システムを作成してください"
-        print(f"\n🧪 単発テスト実行: {test_question}")
-        
-        # 動的Mermaid図を生成・保存
-        mermaid_diagram = automation.generate_dynamic_mermaid_diagram(test_question)
-        mermaid_file = automation.save_mermaid_to_file(mermaid_diagram, "single_test_auto_dev_flow.mermaid")
-        
-        print(f"✅ テスト完了 - Mermaid図ファイル: {mermaid_file}")
-        print("📊 Mermaid図の内容:")
-        print(mermaid_diagram[:500] + "..." if len(mermaid_diagram) > 500 else mermaid_diagram)
-    elif choice == "5":
-        # 最新メッセージ確認
-        automation.check_latest_messages()
-    elif choice == "6":
-        # 単発Push+Issue作成テスト
-        test_question = input("テスト質問を入力してください: ") or "単発テスト実行"
-        test_message = {
-            'messages': test_question,
-            'ownerid': 'test_user',
-            'created': datetime.now().isoformat()
-        }
-        
-        print(f"\n🧪 単発Push+Issue作成テスト: {test_question}")
-        issue_url = automation.create_comprehensive_issue_immediately(test_message)
-        
-        if issue_url:
-            print(f"✅ テスト成功!")
-            print(f"📋 作成されたIssue: {issue_url}")
-        else:
-            print("❌ テスト失敗")
-    elif choice == "7":
-        print("👋 終了しました")
-    else:
-        print("❌ 無効な選択です")
+    print("7. 🔧 Issue解決モード（Issue選択→チャット投稿→自動解決）")
+    print("8. Issue一覧表示・選択Close")
+    print("9. 終了")
