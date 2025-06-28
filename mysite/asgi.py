@@ -19,14 +19,14 @@ try:
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
     
-    app = FastAPI(
+    fastapi_app = FastAPI(
         title="🚀 AI Development Platform - Laravel風統合システム",
         description="Laravel風のGradio統合プラットフォーム",
         version="1.0.0"
     )
     
     # CORS設定
-    app.add_middleware(
+    fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_credentials=True,
@@ -37,7 +37,7 @@ try:
     # Laravel風のルーティング（routes/web.py）を追加
     try:
         from routes.web import router as web_router
-        app.include_router(web_router, prefix="/api")
+        fastapi_app.include_router(web_router, prefix="/api")
         print("✅ Laravel-style web routes loaded")
     except ImportError as e:
         print(f"⚠️ Web routes not loaded: {e}")
@@ -156,15 +156,30 @@ try:
         tabbed_interface = gr.TabbedInterface([simple_interface], ["💬 シンプルチャット"])
         print("⚠️ Using fallback simple interface")
     
-    # キューを有効化（ルートパスで動作させるため）
-    print("🔄 Enabling queue for root path operation...")
+    # キューを有効化
+    print("🔄 Enabling queue for gradio interface...")
     tabbed_interface.queue()
     print("✅ Queue enabled")
     
-    # Gradioをルートパス（/）にマウント
+    # GradioをサブパスにマウントしてDjango Adminとの競合を回避
     import gradio as gr
-    app = gr.mount_gradio_app(app, tabbed_interface, path="/")
-    print("🚀 ✅ Gradio mounted at root path (/) with Laravel-style features!")
+    fastapi_app = gr.mount_gradio_app(fastapi_app, tabbed_interface, path="/gradio")
+    print("🚀 ✅ Gradio mounted at /gradio path with Laravel-style features!")
+    
+    # Django AdminのためのルートをFastAPIに追加
+    from fastapi.responses import RedirectResponse
+    
+    @fastapi_app.get("/")
+    async def root():
+        """メインページからGradioにリダイレクト"""
+        return RedirectResponse(url="/gradio")
+    
+    @fastapi_app.get("/admin")
+    async def admin_redirect():
+        """Django Adminへのリダイレクト"""
+        return RedirectResponse(url="/admin/")
+    
+    print("✅ Django Admin routes configured")
     
 except Exception as e:
     print(f"❌ Failed to create Laravel-style Gradio app: {e}")
@@ -175,11 +190,11 @@ except Exception as e:
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
     
-    app = FastAPI(
+    fastapi_app = FastAPI(
         title="AI Development Platform (Fallback)",
         description="Laravel風のプラットフォーム（フォールバック）"
     )
-    app.add_middleware(
+    fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_credentials=True,
@@ -187,7 +202,7 @@ except Exception as e:
         allow_headers=["*"],
     )
     
-    @app.get("/")
+    @fastapi_app.get("/")
     async def fallback_root():
         return {
             "message": "Fallback mode - Gradio integration failed",
@@ -195,3 +210,18 @@ except Exception as e:
         }
     
     print("⚠️ Using fallback FastAPI app")
+
+# ASGIアプリケーション統合 - 静的ファイル対応版
+async def combined_app(scope, receive, send):
+    """Django Admin（静的ファイル含む）とFastAPIを適切にルーティング"""
+    path = scope.get("path", "/")
+    
+    # Django Admin専用パス（静的ファイルも含む）
+    if path.startswith("/admin") or path.startswith("/static"):
+        await django_application(scope, receive, send)
+    else:
+        # その他は全てFastAPI（Gradio含む）
+        await fastapi_app(scope, receive, send)
+
+# 最終ASGIアプリケーション
+application = combined_app
