@@ -493,31 +493,39 @@ def initialize_laravel_style_gradio():
         traceback.print_exc()
         
         # 最小限のフォールバック
+        print("⚠️ Falling back to standard FastAPI app with Laravel features")
+        
         from fastapi import FastAPI
-        app = FastAPI(title="Fallback App")
+        from fastapi.middleware.cors import CORSMiddleware
+        
+        app = FastAPI(
+            title="AI Development Platform (Laravel Fallback)",
+            description="Laravel風のGradio統合プラットフォーム（フォールバック）",
+            version="1.0.0"
+        )
+        
+        # CORS設定
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
         
         @app.get("/")
         async def fallback_root():
             return {"message": "Laravel風アプリ（フォールバック）", "status": "fallback"}
         
+        @app.get("/api/status")
+        async def api_status():
+            return {"status": "ok", "mode": "fallback"}
+        
+        @app.post("/automation/trigger")
+        async def automation_trigger(request: dict):
+            return {"message": "自動化トリガー（フォールバック）", "received": request}
+        
         return app
-    
-    # フォールバック: 通常のFastAPIアプリを返す
-    print("⚠️ Falling back to standard FastAPI app with Laravel features")
-    
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-    
-    app = FastAPI(
-        title="AI Development Platform (Laravel Fallback)",
-        description="Laravel風のGradio統合プラットフォーム（フォールバック）",
-        version="1.0.0"
-    )
-    
-    # CORS設定
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

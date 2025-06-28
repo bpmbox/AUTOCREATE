@@ -12,6 +12,40 @@ license: mit
 
 # 🏢 AUTOCREATE株式会社 - 世界初のAI社長×無職CTO体制！
 
+## 🎨 よく使うArtisanコマンド（Laravel風）
+
+```bash
+# 🔍 システム情報・ルート確認
+python artisan route:list              # 全ルート一覧
+python artisan route:active            # アクティブルートのみ
+python artisan gradio:list             # Gradio機能一覧
+
+# 🧪 テスト・検証
+python artisan test:copilot             # Copilot自動化システムテスト
+python artisan test:unit                # ユニットテスト実行
+python artisan test:feature             # 機能テスト実行
+python artisan cicd full                # 完全CI/CDパイプライン
+
+# 🚀 サーバー・API
+python artisan fastapi:start            # FastAPIサーバー起動
+python artisan fastapi:integration      # FastAPI統合テスト
+
+# ⚙️ コード生成
+python artisan make:controller UserController      # コントローラー作成
+python artisan make:model User                     # モデル作成
+python artisan make:migration create_users_table   # マイグレーション作成
+
+# 🎨 Gradio機能テスト
+python artisan gradio:test --fix        # Gradio機能テスト（自動修正付き）
+```
+
+### 💡 クイックスタート
+1. **環境準備**: `python -m venv venv && venv\Scripts\activate`
+2. **依存関係**: `pip install -r requirements.txt`
+3. **テスト実行**: `python artisan test:copilot`
+4. **サーバー起動**: `python artisan fastapi:start`
+5. **ブラウザ**: http://localhost:8000
+
 ## 📚 ドキュメント一覧
 
 - [EMERGENCY_MEMORY_FOR_MIYATAKEN999.md](md_docs/EMERGENCY_MEMORY_FOR_MIYATAKEN999.md)

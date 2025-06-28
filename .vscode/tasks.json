@@ -7,6 +7,71 @@
 			"command": "git add . && git commit -m \"フォルダ構成をLaravel風に整理し、ドキュメント・一時ファイルを移動\" && git push",
 			"group": "build",
 			"isBackground": false
+		},
+		{
+			"type": "shell",
+			"label": "🧪 Artisan: Copilotテスト",
+			"command": "${workspaceFolder}/venv/Scripts/python.exe",
+			"args": ["artisan", "test:copilot"],
+			"group": "test",
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"type": "shell",
+			"label": "🚀 Artisan: FastAPIサーバー起動",
+			"command": "${workspaceFolder}/venv/Scripts/python.exe",
+			"args": ["artisan", "fastapi:start"],
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"type": "shell",
+			"label": "🛣️ Artisan: ルート確認",
+			"command": "${workspaceFolder}/venv/Scripts/python.exe",
+			"args": ["artisan", "route:active"],
+			"group": "test",
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"type": "shell",
+			"label": "🎨 Artisan: Gradio機能一覧",
+			"command": "${workspaceFolder}/venv/Scripts/python.exe",
+			"args": ["artisan", "gradio:list"],
+			"group": "test",
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"type": "shell",
+			"label": "🔄 Artisan: CI/CDパイプライン",
+			"command": "${workspaceFolder}/venv/Scripts/python.exe",
+			"args": ["artisan", "cicd", "full"],
+			"group": "test",
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "new"
+			}
 		}
 	]
 }
